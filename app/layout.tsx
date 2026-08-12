@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { NavigationPendingIndicator } from "@/app/components/navigation-pending-indicator";
 import "./globals.css";
 
@@ -11,7 +12,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className="h-full antialiased">
       <body className="min-h-full flex flex-col">
-        <NavigationPendingIndicator />
+        <Suspense fallback={null}>
+          <NavigationPendingIndicator />
+        </Suspense>
         {children}
       </body>
     </html>
