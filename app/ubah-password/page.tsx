@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { changePassword } from "@/app/auth/actions";
+import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { SubmitButton } from "@/app/components/submit-button";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
@@ -71,15 +72,15 @@ export default async function ChangePasswordPage({
               type="password"
             />
           </label>
-          <div className="flex justify-end gap-3 pt-2">
+          <div className={`${buttonGroups.toolbar} justify-end pt-2`}>
             <Link
-              className="inline-grid h-11 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.secondary}
               href="/"
             >
               Batal
             </Link>
             <SubmitButton
-              className="inline-flex h-11 items-center justify-center rounded-md bg-[#2f6696] px-4 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-80"
+              className={buttonStyles.primary}
               pendingText="Menyimpan"
             >
               Simpan

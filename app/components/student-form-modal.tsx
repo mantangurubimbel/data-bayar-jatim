@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { createStudent, updateStudent } from "@/app/auth/actions";
+import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { ModalCloseLink } from "@/app/components/modal-close-link";
 import { SubmitButton } from "@/app/components/submit-button";
 
@@ -125,7 +126,7 @@ export function StudentFormModal({
             {isEditMode ? `Edit Siswa: ${student?.nis}` : `Tambah Siswa: ${branchName}`}
           </h2>
           <ModalCloseLink
-            className="inline-flex h-9 items-center justify-center rounded-md border border-slate-300 px-3 font-sans text-xs font-bold leading-none text-slate-700"
+            className={buttonStyles.secondarySmall}
             href={closeHref}
           >
             Tutup
@@ -364,13 +365,9 @@ export function StudentFormModal({
             </div>
           </div>
 
-          <footer className="flex justify-end gap-2 border-t border-slate-200 px-4 py-3">
+          <footer className={buttonGroups.footer}>
             <button
-              className={`inline-flex h-10 items-center justify-center rounded-md border px-4 font-sans text-sm font-bold leading-none ${
-                isEditMode
-                  ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-300"
-                  : "cursor-pointer border-slate-300 text-slate-700"
-              }`}
+              className={isEditMode ? buttonStyles.disabled : buttonStyles.secondary}
               disabled={isEditMode}
               onClick={() => {
                 setSelectedAcademicYear(student?.academic_year ?? "");
@@ -382,7 +379,7 @@ export function StudentFormModal({
               Clear Form
             </button>
             <SubmitButton
-              className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-4 font-sans text-sm font-bold leading-none text-white"
+              className={buttonStyles.primary}
               pendingText="Menyimpan"
             >
               Simpan

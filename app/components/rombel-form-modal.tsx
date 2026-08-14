@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import { createRombel, updateRombel } from "@/app/auth/actions";
+import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { ModalCloseLink } from "@/app/components/modal-close-link";
 import { SubmitButton } from "@/app/components/submit-button";
 
@@ -74,7 +75,7 @@ export function RombelFormModal({
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">{isEditMode ? "Edit Rombel" : "Tambah Rombel"}</h2>
           <ModalCloseLink
-            className="inline-flex h-10 items-center justify-center rounded-md border border-slate-300 px-4 font-sans text-sm font-bold leading-none text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -161,13 +162,9 @@ export function RombelFormModal({
             )}
           </div>
 
-          <footer className="flex justify-end gap-3 border-t border-slate-200 p-4">
+          <footer className={buttonGroups.modalFooter}>
             <button
-              className={`inline-flex h-10 items-center justify-center rounded-md border px-4 font-sans text-sm font-bold leading-none ${
-                isEditMode
-                  ? "cursor-not-allowed border-slate-200 bg-slate-100 text-slate-400"
-                  : "cursor-pointer border-slate-300 text-slate-700"
-              }`}
+              className={isEditMode ? buttonStyles.disabled : buttonStyles.secondary}
               type="button"
               disabled={isEditMode}
               onClick={() => {
@@ -180,7 +177,7 @@ export function RombelFormModal({
               {isEditMode ? "Reset" : "Clear Form"}
             </button>
             <SubmitButton
-              className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-4 font-sans text-sm font-bold leading-none text-white"
+              className={buttonStyles.primary}
               disabled={!isRombelNameValid}
               pendingText="Menyimpan"
             >

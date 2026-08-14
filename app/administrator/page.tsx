@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { retrySheetSync, updateUserAccess } from "@/app/auth/actions";
 import { BranchAccessDropdown } from "@/app/components/branch-access-dropdown";
+import { buttonStyles } from "@/app/components/button-styles";
 import { SubmitButton } from "@/app/components/submit-button";
 import {
   createSupabaseServerClient,
@@ -250,7 +251,7 @@ export default async function AdministratorPage({
             <h1 className="text-xl font-bold">Manajemen User & Branch Access</h1>
           </div>
           <Link
-            className="inline-grid h-9 place-items-center rounded-md border border-white/25 px-4 text-sm font-bold text-white"
+            className={buttonStyles.header}
             href="/"
           >
             Dashboard
@@ -524,7 +525,7 @@ export default async function AdministratorPage({
                               <input name="nis" type="hidden" value={log.nis} />
                               <input name="sync_action" type="hidden" value={log.action} />
                               <SubmitButton
-                                className="inline-flex h-8 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-3 text-xs font-black text-white disabled:cursor-wait disabled:opacity-80"
+                                className={buttonStyles.primarySmall}
                                 pendingText="Retry"
                               >
                                 Retry
@@ -612,7 +613,7 @@ export default async function AdministratorPage({
                       </td>
                       <td className="px-4 py-3 text-right">
                         <SubmitButton
-                          className="inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-4 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-80"
+                          className={buttonStyles.primary}
                           form={`user-access-${appUser.id}`}
                           pendingText="Menyimpan"
                         >

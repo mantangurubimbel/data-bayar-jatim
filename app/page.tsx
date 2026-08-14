@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { createBranchSchool, deleteRombel, deleteStudent, mutateStudent } from "@/app/auth/actions";
 import { AutoSubmitSelect } from "@/app/components/auto-submit-select";
+import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { ModalCloseLink } from "@/app/components/modal-close-link";
 import { RombelTableCard } from "@/app/components/rombel-table-card";
 import { RombelFormModal } from "@/app/components/rombel-form-modal";
@@ -1152,7 +1153,7 @@ function StudentDetailModal({
         <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Detail Siswa: {student.nis}</h2>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1203,36 +1204,36 @@ function StudentDetailModal({
           </div>
         </div>
 
-        <footer className="flex shrink-0 flex-wrap justify-end gap-3 border-t border-slate-200 p-4">
+        <footer className={`shrink-0 ${buttonGroups.modalFooter}`}>
           {hasPurchaseHistory ? (
             <Link
-              className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.secondary}
               href={historyHref}
             >
               Riwayat Pembelian
             </Link>
           ) : (
             <button
-              className="inline-grid h-10 cursor-not-allowed place-items-center rounded-md border border-slate-200 px-4 text-sm font-bold text-slate-400"
+              className={buttonStyles.disabled}
               disabled
             >
               Riwayat Pembelian
             </button>
           )}
           <Link
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={editHref}
           >
             Edit Data
           </Link>
           <Link
-            className="inline-grid h-10 place-items-center rounded-md bg-[#2f6696] px-4 text-sm font-bold text-white"
+            className={buttonStyles.primary}
             href={mutateHref}
           >
             Mutasi
           </Link>
           <Link
-            className="inline-grid h-10 place-items-center rounded-md bg-[#c85243] px-4 text-sm font-bold text-white"
+            className={buttonStyles.danger}
             href={deleteHref}
           >
             Hapus
@@ -1301,9 +1302,9 @@ function PurchaseHistoryModal({
           </div>
         </div>
 
-        <footer className="sticky bottom-0 flex justify-end border-t border-slate-200 bg-white p-4">
+        <footer className={`sticky bottom-0 bg-white ${buttonGroups.modalFooter}`}>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1359,15 +1360,15 @@ function RombelDetailModal({
             </div>
           ))}
         </div>
-        <footer className="flex justify-end gap-3 border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <Link
-            className="inline-grid h-10 place-items-center rounded-md bg-[#2f6696] px-4 text-sm font-bold text-white"
+            className={buttonStyles.primary}
             href={studentsHref}
           >
             Daftar Siswa
           </Link>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1432,9 +1433,9 @@ function RombelStudentsModal({
             </tbody>
           </table>
         </div>
-        <footer className="flex justify-end border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1460,7 +1461,7 @@ function DeleteRombelConfirmModal({
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Hapus Rombel</h2>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1484,12 +1485,12 @@ function DeleteRombelConfirmModal({
             ))}
           </div>
         </div>
-        <footer className="flex justify-end border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <form action={deleteRombel}>
             <input name="rombel_id" type="hidden" value={String(rombel.rombel_id)} />
             <input name="redirect_to" type="hidden" value={redirectTo} />
             <SubmitButton
-              className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-red-600 px-4 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-wait disabled:opacity-80"
+              className={buttonStyles.danger}
               pendingText="Menghapus"
             >
               Hapus
@@ -1534,9 +1535,9 @@ function DeleteStudentConfirmModal({
             ))}
           </div>
         </div>
-        <footer className="flex justify-end gap-3 border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Batal
@@ -1545,7 +1546,7 @@ function DeleteStudentConfirmModal({
             <input name="nis" type="hidden" value={String(student.nis)} />
             <input name="redirect_to" type="hidden" value={redirectTo} />
             <SubmitButton
-              className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-red-600 px-4 text-sm font-bold text-white hover:bg-red-700 disabled:cursor-wait disabled:opacity-80"
+              className={buttonStyles.danger}
               pendingText="Menghapus"
             >
               Hapus
@@ -1611,15 +1612,15 @@ function MutateStudentModal({
               Setelah mutasi, rombel siswa akan dikosongkan dan perlu dipilih ulang di cabang tujuan.
             </div>
           </div>
-          <footer className="flex justify-end gap-3 border-t border-slate-200 p-4">
+          <footer className={buttonGroups.modalFooter}>
             <ModalCloseLink
-              className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.secondary}
               href={closeHref}
             >
               Batal
             </ModalCloseLink>
             <SubmitButton
-              className="inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-4 text-sm font-bold text-white disabled:cursor-wait disabled:opacity-80"
+              className={buttonStyles.primary}
               pendingText="Memutasi"
             >
               Mutasi
@@ -1641,9 +1642,9 @@ function MutationSuccessModal({ closeHref }: { closeHref: string }) {
         <div className="p-4">
           <p className="text-sm font-semibold text-slate-600">Siswa berhasil dimutasi</p>
         </div>
-        <footer className="flex justify-end border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1712,9 +1713,9 @@ function SchoolDetailModal({
             </div>
           )}
         </div>
-        <footer className="flex justify-end border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup
@@ -1778,7 +1779,7 @@ function SchoolLookupModal({
                 placeholder="Masukkan NPSN"
               />
             </label>
-            <button className="h-10 rounded-md bg-[#2f6696] px-4 text-sm font-bold text-white">
+            <button className={buttonStyles.primary}>
               Cari
             </button>
           </form>
@@ -1812,17 +1813,13 @@ function SchoolLookupModal({
             </>
           )}
         </div>
-        <footer className="flex justify-end gap-3 border-t border-slate-200 p-4">
+        <footer className={buttonGroups.modalFooter}>
           <form action={createBranchSchool}>
             {branchId && <input name="branch_id" type="hidden" value={branchId} />}
             <input name="npsn" type="hidden" value={lookupNpsn} />
             <input name="redirect_to" type="hidden" value={redirectTo} />
             <SubmitButton
-              className={`inline-flex h-10 items-center justify-center rounded-md px-4 text-sm font-bold ${
-                school && !alreadyRegistered
-                  ? "bg-[#2f6696] text-white"
-                  : "cursor-not-allowed bg-slate-100 text-slate-300"
-              }`}
+              className={school && !alreadyRegistered ? buttonStyles.primary : buttonStyles.disabled}
               disabled={!school || alreadyRegistered}
               pendingText="Mendaftarkan"
             >
@@ -1830,7 +1827,7 @@ function SchoolLookupModal({
             </SubmitButton>
           </form>
           <ModalCloseLink
-            className="inline-grid h-10 place-items-center rounded-md border border-slate-300 px-4 text-sm font-bold text-slate-700"
+            className={buttonStyles.secondary}
             href={closeHref}
           >
             Tutup

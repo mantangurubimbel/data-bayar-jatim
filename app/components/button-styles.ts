@@ -1,30 +1,47 @@
+const buttonBase =
+  "inline-flex cursor-pointer items-center justify-center rounded-md font-sans font-bold leading-none transition-colors disabled:cursor-wait disabled:opacity-80";
+
+const buttonSizes = {
+  sm: "h-7 gap-1.5 px-2.5 text-xs",
+  md: "h-9 gap-1.5 px-3.5 text-sm",
+  lg: "h-11 gap-2 px-4 text-base",
+  iconSm: "size-8",
+  iconMd: "size-9",
+};
+
+const buttonColors = {
+  primary: "border border-[#2f6696] bg-[#2f6696] text-white hover:border-[#285985] hover:bg-[#285985]",
+  secondary: "border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50",
+  danger: "border border-red-700 bg-red-700 text-white hover:border-red-800 hover:bg-red-800",
+  disabled: "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 hover:border-slate-200 hover:bg-slate-100",
+  header: "border border-white/25 bg-transparent text-white hover:border-white/45 hover:bg-white/10",
+  ghostPrimary: "border border-transparent bg-transparent text-[#2f6696] hover:border-slate-200 hover:bg-slate-100",
+};
+
 export const buttonStyles = {
-  primary:
-    "inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-4 font-sans text-sm font-bold leading-none text-white hover:bg-[#285985] disabled:cursor-wait disabled:opacity-80",
-  primaryLarge:
-    "inline-flex h-12 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-5 font-sans text-base font-bold leading-none text-white hover:bg-[#285985] disabled:cursor-wait disabled:opacity-80",
-  primarySmall:
-    "inline-flex h-9 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] px-3 font-sans text-xs font-bold leading-none text-white hover:bg-[#285985] disabled:cursor-wait disabled:opacity-80",
-  secondary:
-    "inline-flex h-10 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white px-4 font-sans text-sm font-bold leading-none text-slate-700 hover:bg-slate-50",
-  secondaryLarge:
-    "inline-flex h-11 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white px-4 font-sans text-sm font-bold leading-none text-slate-700 hover:bg-slate-50",
-  secondarySmall:
-    "inline-flex h-9 cursor-pointer items-center justify-center rounded-md border border-slate-300 bg-white px-3 font-sans text-xs font-bold leading-none text-slate-700 hover:bg-slate-50",
-  danger:
-    "inline-flex h-10 cursor-pointer items-center justify-center rounded-md bg-red-600 px-4 font-sans text-sm font-bold leading-none text-white hover:bg-red-700 disabled:cursor-wait disabled:opacity-80",
-  disabled:
-    "inline-flex h-10 cursor-not-allowed items-center justify-center rounded-md border border-slate-200 bg-slate-100 px-4 font-sans text-sm font-bold leading-none text-slate-400",
-  iconPrimary:
-    "inline-flex size-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] text-white hover:bg-[#285985] disabled:cursor-wait disabled:opacity-80",
-  iconEdit:
-    "inline-grid size-8 place-items-center rounded-md text-[#2f6696] hover:bg-sky-50",
-  iconDanger:
-    "inline-grid size-8 place-items-center rounded-md text-red-600 hover:bg-red-50",
-  iconDisabled:
-    "inline-grid size-8 cursor-not-allowed place-items-center rounded-md text-slate-300",
-  pager:
-    "inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 font-sans text-sm font-bold leading-none text-slate-700 hover:bg-slate-200",
-  pagerDisabled:
-    "inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 font-sans text-sm font-bold leading-none text-slate-300",
+  primary: `${buttonBase} ${buttonSizes.md} ${buttonColors.primary}`,
+  primaryLarge: `${buttonBase} ${buttonSizes.lg} ${buttonColors.primary}`,
+  primarySmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.primary}`,
+  secondary: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
+  secondaryLarge: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
+  secondarySmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.secondary}`,
+  danger: `${buttonBase} ${buttonSizes.md} ${buttonColors.danger}`,
+  dangerSmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.danger}`,
+  disabled: `${buttonBase} ${buttonSizes.md} ${buttonColors.disabled}`,
+  disabledSmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.disabled}`,
+  header: `${buttonBase} ${buttonSizes.md} ${buttonColors.header}`,
+  iconPrimary: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.primary}`,
+  iconEdit: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.ghostPrimary}`,
+  iconDanger: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.danger}`,
+  iconDisabled: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.disabled}`,
+  pager: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
+  pagerDisabled: `${buttonBase} ${buttonSizes.md} ${buttonColors.disabled}`,
+  clearSearch:
+    "absolute right-2 top-1/2 hidden size-6 -translate-y-1/2 cursor-pointer place-items-center rounded-md border border-transparent bg-transparent font-sans text-sm font-bold leading-none text-slate-400 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-700 group-hover:grid",
+};
+
+export const buttonGroups = {
+  footer: "flex flex-wrap justify-end gap-2 border-t border-slate-200 px-4 py-3",
+  modalFooter: "flex flex-wrap justify-end gap-2 border-t border-slate-200 p-4",
+  toolbar: "flex flex-wrap items-center gap-2",
 };

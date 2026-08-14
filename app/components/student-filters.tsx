@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { buttonStyles } from "@/app/components/button-styles";
 
 export function StudentFilters({
   branchId,
@@ -84,7 +85,7 @@ export function StudentFilters({
           />
           {search && (
             <button
-              className="absolute right-2 top-1/2 hidden size-6 -translate-y-1/2 place-items-center rounded-full text-lg leading-none text-slate-400 hover:bg-slate-100 hover:text-slate-700 group-hover:grid"
+              className={buttonStyles.clearSearch}
               type="button"
               onClick={() => setSearch("")}
               aria-label="Hapus pencarian"

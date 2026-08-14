@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signIn } from "@/app/auth/actions";
+import { buttonStyles } from "@/app/components/button-styles";
 import { SubmitButton } from "@/app/components/submit-button";
 
 export default async function LoginPage({
@@ -55,7 +56,7 @@ export default async function LoginPage({
             />
           </label>
           <SubmitButton
-            className="mt-2 inline-flex h-12 items-center justify-center rounded-md bg-[#2f6696] px-5 text-base font-bold text-white disabled:cursor-wait disabled:opacity-80"
+            className={`mt-2 ${buttonStyles.primaryLarge}`}
             pendingText="Masuk"
           >
             Masuk
