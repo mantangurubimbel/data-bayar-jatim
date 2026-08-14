@@ -212,7 +212,15 @@ export function StudentFormModal({
               </label>
               <label className={labelClass}>
                 Email *
-                <input className={fieldClass(student?.email)} defaultValue={student?.email ?? ""} name="email" required type="email" />
+                <input
+                  className={fieldClass(student?.email)}
+                  defaultValue={student?.email ?? ""}
+                  name="email"
+                  pattern="[^\\s@]+@[^\\s@]+\\.[^\\s@]+"
+                  required
+                  title="Domain email sepertinya salah. Periksa kembali alamat email."
+                  type="email"
+                />
               </label>
             </div>
 

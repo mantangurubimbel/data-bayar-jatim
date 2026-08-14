@@ -16,6 +16,10 @@ export function NavigationPendingIndicator() {
   }, [pathname, search]);
 
   useEffect(() => {
+    function handlePendingNavigation() {
+      setIsPending(true);
+    }
+
     function handleClick(event: MouseEvent) {
       if (event.defaultPrevented || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) {
         return;
@@ -48,8 +52,12 @@ export function NavigationPendingIndicator() {
       setIsPending(true);
     }
 
+    window.addEventListener("app:navigation-pending", handlePendingNavigation);
     document.addEventListener("click", handleClick, true);
-    return () => document.removeEventListener("click", handleClick, true);
+    return () => {
+      window.removeEventListener("app:navigation-pending", handlePendingNavigation);
+      document.removeEventListener("click", handleClick, true);
+    };
   }, []);
 
   if (!isPending) {

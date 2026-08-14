@@ -322,6 +322,46 @@ function isValidPhone(value: string | null) {
   return !value || /^[0-9]{8,15}$/.test(value);
 }
 
+const invalidEmailMessage = "Domain email sepertinya salah. Periksa kembali alamat email.";
+const disposableEmailDomains = new Set([
+  "10minutemail.com",
+  "guerrillamail.com",
+  "mailinator.com",
+  "tempmail.com",
+  "temp-mail.org",
+  "yopmail.com",
+]);
+const typoEmailDomains = new Set([
+  "gmai.com",
+  "gmail.co",
+  "gmail.con",
+  "gmial.com",
+  "gnail.com",
+  "yaho.com",
+  "yahoo.co",
+  "yahoo.con",
+  "yahho.com",
+]);
+
+function normalizeValidEmail(formData: FormData, key: string) {
+  const rawValue = String(formData.get(key) ?? "");
+  const email = rawValue.trim().toLowerCase();
+  const domain = email.split("@")[1] ?? "";
+  const isValidFormat = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+
+  if (
+    !email ||
+    /\s/.test(email) ||
+    !isValidFormat ||
+    disposableEmailDomains.has(domain) ||
+    typoEmailDomains.has(domain)
+  ) {
+    return null;
+  }
+
+  return email;
+}
+
 function studentErrorRedirect(redirectTo: string, mode: "add" | "edit") {
   const modalParam = mode === "add" ? "addStudent=1" : "editStudent=1";
   return redirectTo.includes("?") ? `${redirectTo}&${modalParam}` : `${redirectTo}?${modalParam}`;
@@ -742,6 +782,7 @@ export async function createStudent(formData: FormData) {
   const userSerial = formString(formData, "user_serial");
   const userName = formString(formData, "user_name");
   const userPhone = formString(formData, "user_phone");
+  const email = normalizeValidEmail(formData, "email");
   const gradeId = optionalNumber(formData, "grade_id");
   const npsn = formString(formData, "school_npsn");
   const paymentId = optionalNumber(formData, "payment_id");
@@ -749,6 +790,10 @@ export async function createStudent(formData: FormData) {
 
   if (!paymentDate || !academicYear || !userSerial || !userName || !userPhone || !gradeId || !npsn || !paymentId || !agentId) {
     redirect(`${errorRedirectTo}&studentError=${encodeURIComponent("Field wajib belum lengkap.")}`);
+  }
+
+  if (!email) {
+    redirect(`${errorRedirectTo}&studentError=${encodeURIComponent(invalidEmailMessage)}`);
   }
 
   const parentsPhone = optionalString(formData, "parents_phone");
@@ -779,7 +824,7 @@ export async function createStudent(formData: FormData) {
     user_name: userName,
     user_phone: userPhone,
     birth_date: optionalString(formData, "birth_date"),
-    email: formString(formData, "email"),
+    email,
     grade_id: gradeId,
     npsn,
     rombel_id: optionalNumber(formData, "rombel_id"),
@@ -843,6 +888,7 @@ export async function updateStudent(formData: FormData) {
   const userSerial = formString(formData, "user_serial");
   const userName = formString(formData, "user_name");
   const userPhone = formString(formData, "user_phone");
+  const email = normalizeValidEmail(formData, "email");
   const gradeId = optionalNumber(formData, "grade_id");
   const npsn = formString(formData, "school_npsn");
   const paymentId = optionalNumber(formData, "payment_id");
@@ -850,6 +896,10 @@ export async function updateStudent(formData: FormData) {
 
   if (!paymentDate || !academicYear || !userSerial || !userName || !userPhone || !gradeId || !npsn || !paymentId || !agentId) {
     redirect(`${errorRedirectTo}&studentError=${encodeURIComponent("Field wajib belum lengkap.")}`);
+  }
+
+  if (!email) {
+    redirect(`${errorRedirectTo}&studentError=${encodeURIComponent(invalidEmailMessage)}`);
   }
 
   const parentsPhone = optionalString(formData, "parents_phone");
@@ -867,7 +917,7 @@ export async function updateStudent(formData: FormData) {
       user_name: userName,
       user_phone: userPhone,
       birth_date: optionalString(formData, "birth_date"),
-      email: formString(formData, "email"),
+      email,
       grade_id: gradeId,
       npsn,
       rombel_id: optionalNumber(formData, "rombel_id"),

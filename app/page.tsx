@@ -303,8 +303,18 @@ async function getDashboardData(params: SearchParams) {
 
   const selectedBranch =
     branches.find((branch) => String(branch.branch_id) === params.branch) ?? branches[0] ?? null;
+  const { data: branchStudentYears } = selectedBranch
+    ? await dataSupabase
+        .from("t_students")
+        .select("academic_year")
+        .eq("branch_id", selectedBranch.branch_id)
+        .neq("status", "Deleted")
+        .order("academic_year", { ascending: false })
+    : { data: [] };
+  const availableYears = [...new Set((branchStudentYears ?? []).map((row) => row.academic_year).filter(Boolean))];
   const selectedYear =
-    params.year ??
+    (params.year && availableYears.includes(params.year) ? params.year : null) ??
+    availableYears[0] ??
     years?.find((year) => year.is_active)?.academic_year ??
     years?.[0]?.academic_year ??
     "26/27";
@@ -326,6 +336,7 @@ async function getDashboardData(params: SearchParams) {
       years: years ?? [],
       selectedBranch,
       selectedYear,
+      availableYears,
       query,
       incompleteOnly,
       currentPage,
@@ -348,6 +359,7 @@ async function getDashboardData(params: SearchParams) {
       selectedRombel: null,
       rombelStudents: [],
       selectedSchool: null,
+      selectedSchoolYearCounts: [],
       schoolLookup: null,
       schoolAlreadyRegistered: false,
       lookupNpsn: "",
@@ -471,6 +483,26 @@ async function getDashboardData(params: SearchParams) {
         .eq("npsn", selectedSchool.npsn)
         .eq("branch_id", selectedBranch.branch_id)
     : { count: 0 };
+  const { data: selectedSchoolYearRows } = selectedSchool
+    ? await dataSupabase
+        .from("v_student_detail")
+        .select("academic_year")
+        .eq("npsn", selectedSchool.npsn)
+        .eq("branch_id", selectedBranch.branch_id)
+        .neq("status", "Deleted")
+        .order("academic_year", { ascending: false })
+    : { data: [] };
+  const selectedSchoolYearCounts = Array.from(
+    (selectedSchoolYearRows ?? []).reduce((acc, row) => {
+      const academicYear = row.academic_year?.trim();
+      if (!academicYear) {
+        return acc;
+      }
+
+      acc.set(academicYear, (acc.get(academicYear) ?? 0) + 1);
+      return acc;
+    }, new Map<string, number>()).entries(),
+  ).map(([academic_year, student_count]) => ({ academic_year, student_count }));
 
   const normalizedLookupNpsn = params.lookupNpsn?.trim() ?? "";
   const { data: lookupSchool } =
@@ -547,6 +579,7 @@ async function getDashboardData(params: SearchParams) {
     years: years ?? [],
     selectedBranch,
     selectedYear,
+    availableYears,
     query,
     incompleteOnly,
     currentPage,
@@ -572,6 +605,7 @@ async function getDashboardData(params: SearchParams) {
     selectedSchool: selectedSchool
       ? { ...selectedSchool, student_count: selectedSchoolStudentCount ?? 0 }
       : null,
+    selectedSchoolYearCounts,
     schoolLookup: lookupSchool,
     schoolAlreadyRegistered: Boolean(registeredSchool),
     lookupNpsn: normalizedLookupNpsn,
@@ -753,10 +787,10 @@ export default async function Home({
                 name="year"
                 value={data.selectedYear}
                 options={
-                  data.years.length
-                    ? data.years.map((year) => ({
-                        label: year.academic_year,
-                        value: year.academic_year,
+                  data.availableYears.length
+                    ? data.availableYears.map((year) => ({
+                        label: year,
+                        value: year,
                       }))
                     : [{ label: data.selectedYear, value: data.selectedYear }]
                 }
@@ -1003,6 +1037,7 @@ export default async function Home({
       {data.selectedSchool && (
         <SchoolDetailModal
           school={data.selectedSchool}
+          yearCounts={data.selectedSchoolYearCounts}
           closeHref={dashboardHref(data, { school: null })}
         />
       )}
@@ -1621,9 +1656,11 @@ function MutationSuccessModal({ closeHref }: { closeHref: string }) {
 
 function SchoolDetailModal({
   school,
+  yearCounts = [],
   closeHref,
 }: {
   school: DetailRecord;
+  yearCounts?: { academic_year: string; student_count: number }[];
   closeHref: string;
 }) {
   const rows: DetailRow[] = [
@@ -1656,6 +1693,24 @@ function SchoolDetailModal({
               <p className="text-slate-700">{String(value ?? "-")}</p>
             </div>
           ))}
+          {yearCounts.length > 0 && (
+            <div className="px-4 py-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-slate-500">
+                Rincian per Tahun Ajaran
+              </p>
+              <div className="mt-3 grid gap-2">
+                {yearCounts.map((item) => (
+                  <div
+                    className="flex items-center justify-between rounded-md bg-slate-50 px-3 py-2 text-sm"
+                    key={item.academic_year}
+                  >
+                    <span className="font-semibold text-slate-600">{item.academic_year}</span>
+                    <span className="font-bold text-slate-800">{item.student_count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
         <footer className="flex justify-end border-t border-slate-200 p-4">
           <ModalCloseLink
