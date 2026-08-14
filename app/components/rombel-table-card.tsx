@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Pencil, RefreshCw, Trash2 } from "lucide-react";
+import { buttonStyles } from "@/app/components/button-styles";
 import { useMemo, useState, useTransition } from "react";
 
 type RombelRow = {
@@ -12,10 +13,6 @@ type RombelRow = {
 };
 
 const rombelPageSize = 20;
-const buttonClass =
-  "inline-flex h-10 items-center justify-center rounded-md bg-[#2f6696] px-4 font-sans text-sm font-bold leading-none text-white";
-const iconButtonClass =
-  "inline-flex size-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] text-white disabled:cursor-pointer";
 
 export function RombelTableCard({
   branchId,
@@ -111,12 +108,12 @@ export function RombelTableCard({
           {error ? <p className="mt-2 text-sm font-bold text-red-600">{error}</p> : null}
         </div>
         <div className="flex gap-2">
-          <Link className={buttonClass} href={actionHref}>
+          <Link className={buttonStyles.primary} href={actionHref}>
             + Rombel
           </Link>
           <button
             aria-label="Muat ulang data rombel"
-            className={iconButtonClass}
+            className={buttonStyles.iconPrimary}
             disabled={isPending}
             onClick={refreshRombels}
             title="Muat ulang"
@@ -134,13 +131,13 @@ export function RombelTableCard({
         <div className="flex items-center gap-3">
           {currentPage > 1 ? (
             <Link
-              className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.pager}
               href={pageHref(currentPage - 1)}
             >
               Prev
             </Link>
           ) : (
-            <span className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-300">
+            <span className={buttonStyles.pagerDisabled}>
               Prev
             </span>
           )}
@@ -149,13 +146,13 @@ export function RombelTableCard({
           </span>
           {currentPage < totalPages ? (
             <Link
-              className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.pager}
               href={pageHref(currentPage + 1)}
             >
               Next
             </Link>
           ) : (
-            <span className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-300">
+            <span className={buttonStyles.pagerDisabled}>
               Next
             </span>
           )}
@@ -227,7 +224,7 @@ function RombelTable({ rows, detailBaseHref }: { rows: string[][]; detailBaseHre
                     <div className="inline-flex items-center justify-end gap-1">
                       <Link
                         aria-label={`Edit rombel ${row[0]}`}
-                        className="inline-grid size-8 place-items-center rounded-md text-[#2f6696] hover:bg-sky-50"
+                        className={buttonStyles.iconEdit}
                         href={editHref(row[3])}
                         title="Edit rombel"
                       >
@@ -235,11 +232,7 @@ function RombelTable({ rows, detailBaseHref }: { rows: string[][]; detailBaseHre
                       </Link>
                       <Link
                         aria-label={`Hapus rombel ${row[0]}`}
-                        className={`inline-grid size-8 place-items-center rounded-md ${
-                          Number(row[2]) > 0
-                            ? "pointer-events-none cursor-not-allowed text-slate-300"
-                            : "text-red-600 hover:bg-red-50"
-                        }`}
+                        className={Number(row[2]) > 0 ? buttonStyles.iconDisabled : buttonStyles.iconDanger}
                         href={Number(row[2]) > 0 ? "#" : deleteHref(row[3])}
                         title={
                           Number(row[2]) > 0

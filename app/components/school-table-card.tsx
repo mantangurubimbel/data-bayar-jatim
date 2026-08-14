@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { RefreshCw } from "lucide-react";
+import { buttonStyles } from "@/app/components/button-styles";
 import { useState, useTransition } from "react";
 
 type SchoolRow = {
@@ -11,10 +12,6 @@ type SchoolRow = {
 };
 
 const schoolPageSize = 20;
-const buttonClass =
-  "inline-flex h-10 items-center justify-center rounded-md bg-[#2f6696] px-4 font-sans text-sm font-bold leading-none text-white";
-const iconButtonClass =
-  "inline-flex size-10 cursor-pointer items-center justify-center rounded-md bg-[#2f6696] text-white disabled:cursor-pointer";
 
 export function SchoolTableCard({
   branchId,
@@ -107,12 +104,12 @@ export function SchoolTableCard({
           {error ? <p className="mt-2 text-sm font-bold text-red-600">{error}</p> : null}
         </div>
         <div className="flex gap-2">
-          <Link className={buttonClass} href={actionHref}>
+          <Link className={buttonStyles.primary} href={actionHref}>
             + Sekolah
           </Link>
           <button
             aria-label="Muat ulang Data Sekolah Cabang"
-            className={iconButtonClass}
+            className={buttonStyles.iconPrimary}
             disabled={isPending}
             onClick={refreshSchools}
             title="Muat ulang"
@@ -166,13 +163,13 @@ export function SchoolTableCard({
         <div className="flex items-center gap-3">
           {currentPage > 1 ? (
             <Link
-              className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.pager}
               href={pageHref(currentPage - 1)}
             >
               Prev
             </Link>
           ) : (
-            <span className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-300">
+            <span className={buttonStyles.pagerDisabled}>
               Prev
             </span>
           )}
@@ -181,13 +178,13 @@ export function SchoolTableCard({
           </span>
           {currentPage < totalPages ? (
             <Link
-              className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-700"
+              className={buttonStyles.pager}
               href={pageHref(currentPage + 1)}
             >
               Next
             </Link>
           ) : (
-            <span className="inline-grid h-10 place-items-center rounded-md bg-slate-100 px-4 text-sm font-bold text-slate-300">
+            <span className={buttonStyles.pagerDisabled}>
               Next
             </span>
           )}
