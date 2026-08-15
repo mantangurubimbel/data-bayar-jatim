@@ -14,6 +14,7 @@ type StudentRow = {
   rombel_name: string | null;
   user_serial: string;
   is_incomplete: boolean | null;
+  status: string | null;
 };
 
 const pageSize = 20;
@@ -24,6 +25,8 @@ export function StudentTableCard({
   academicYear,
   query,
   incompleteOnly,
+  loyalOnly,
+  statusFilter,
   keepParams,
   initialStudents,
   initialSerialCounts,
@@ -39,6 +42,8 @@ export function StudentTableCard({
   academicYear: string;
   query: string;
   incompleteOnly: boolean;
+  loyalOnly: boolean;
+  statusFilter: string;
   keepParams: Record<string, string | undefined>;
   initialStudents: StudentRow[];
   initialSerialCounts: Record<string, number>;
@@ -57,6 +62,8 @@ export function StudentTableCard({
   const [error, setError] = useState<string | null>(null);
   const [filterKey, setFilterKey] = useState(0);
   const [filterIncompleteOnly, setFilterIncompleteOnly] = useState(incompleteOnly);
+  const [filterLoyalOnly, setFilterLoyalOnly] = useState(loyalOnly);
+  const [filterStatus, setFilterStatus] = useState(statusFilter);
   const [isPending, startTransition] = useTransition();
   const firstRow = totalStudents === 0 ? 0 : (currentPage - 1) * pageSize + 1;
   const lastRow = Math.min(currentPage * pageSize, totalStudents);
@@ -93,6 +100,15 @@ export function StudentTableCard({
       if (query) {
         params.set("q", query);
       }
+      if (incompleteOnly) {
+        params.set("incomplete", "1");
+      }
+      if (statusFilter) {
+        params.set("status", statusFilter);
+      }
+      if (loyalOnly) {
+        params.set("loyal", "1");
+      }
 
       const response = await fetch(`/api/students?${params.toString()}`, {
         cache: "no-store",
@@ -123,6 +139,8 @@ export function StudentTableCard({
       setTotalStudents(result.totalStudents ?? 0);
       window.history.replaceState(null, "", pageHref(nextPage));
       setFilterIncompleteOnly(false);
+      setFilterLoyalOnly(false);
+      setFilterStatus("");
       setFilterKey((current) => current + 1);
     });
   }
@@ -160,6 +178,8 @@ export function StudentTableCard({
         year={academicYear}
         query={query}
         incompleteOnly={filterIncompleteOnly}
+        loyalOnly={filterLoyalOnly}
+        statusFilter={filterStatus}
         keepParams={keepParams}
       />
 
@@ -168,11 +188,10 @@ export function StudentTableCard({
           <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600">
             <tr>
               <th className="w-[14%] px-3 py-2 font-bold">NIS</th>
-              <th className="w-[22%] px-3 py-2 font-bold">Nama Siswa</th>
+              <th className="w-[28%] px-3 py-2 font-bold">Nama Siswa</th>
               <th className="w-[28%] px-3 py-2 font-bold">Asal Sekolah</th>
               <th className="w-[12%] px-3 py-2 font-bold">Jenjang Kelas</th>
-              <th className="w-[16%] px-3 py-2 font-bold">Rombel</th>
-              <th className="w-[8%] px-3 py-2 font-bold">Info</th>
+              <th className="w-[18%] px-3 py-2 font-bold">Rombel</th>
             </tr>
           </thead>
           <tbody>
@@ -200,22 +219,11 @@ export function StudentTableCard({
                 <td className="truncate px-3 py-2 text-slate-600" title={student.rombel_name ?? ""}>
                   {student.rombel_name ?? "-"}
                 </td>
-                <td className="px-3 py-2">
-                  <span
-                    className={`inline-flex min-w-8 items-center justify-center rounded-md px-2 py-1 text-xs font-bold ${
-                      student.is_incomplete
-                        ? "bg-orange-100 text-orange-700"
-                        : "bg-emerald-100 text-emerald-700"
-                    }`}
-                  >
-                    {student.is_incomplete ? "Cek" : "OK"}
-                  </span>
-                </td>
               </tr>
             ))}
             {!students.length && (
               <tr>
-                <td className="px-4 py-8 text-center font-semibold text-slate-500" colSpan={6}>
+                <td className="px-4 py-8 text-center font-semibold text-slate-500" colSpan={5}>
                   Data siswa belum tersedia untuk filter ini.
                 </td>
               </tr>

@@ -2,7 +2,7 @@
 
 import { LoaderCircle } from "lucide-react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Option = {
   label: string;
@@ -27,9 +27,21 @@ export function AutoSubmitSelect({
   const searchParams = useSearchParams();
   const search = searchParams.toString();
   const isHeader = variant === "header";
-  const [pendingHref, setPendingHref] = useState<string | null>(null);
+  const [pendingValue, setPendingValue] = useState<string | null>(null);
   const currentHref = useMemo(() => `${pathname}?${search}`, [pathname, search]);
-  const isPending = pendingHref !== null && pendingHref !== currentHref;
+  const isPending = pendingValue !== null && pendingValue !== value;
+
+  useEffect(() => {
+    if (!pendingValue) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setPendingValue(null);
+    }, 8000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [pendingValue]);
 
   return (
     <label
@@ -52,6 +64,7 @@ export function AutoSubmitSelect({
           name={name}
           value={value}
           onChange={(event) => {
+            const nextValue = event.currentTarget.value;
             const form = event.currentTarget.form;
             if (!form) {
               return;
@@ -65,7 +78,13 @@ export function AutoSubmitSelect({
             });
             params.set("page", "1");
             const nextHref = `/?${params.toString()}`;
-            setPendingHref(nextHref);
+
+            if (nextHref === currentHref || nextValue === value) {
+              setPendingValue(null);
+              return;
+            }
+
+            setPendingValue(nextValue);
             window.dispatchEvent(new Event("app:navigation-pending"));
             router.push(nextHref);
           }}

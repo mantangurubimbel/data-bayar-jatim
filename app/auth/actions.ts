@@ -13,6 +13,20 @@ type AuditSnapshot = Record<string, string | number | null>;
 type AuditEntityType = "student" | "rombel" | "branch_school" | "academic_year" | "master_data" | "user";
 
 const rombelGradeMismatchMessage = "Nama rombel tidak sesuai dengan pilihan jenjang kelas";
+const futurePaymentDateMessage = "Tanggal bayar tidak boleh lebih dari tanggal hari ini.";
+
+function jakartaTodayDateInputValue() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Jakarta",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
+}
+
+function isFuturePaymentDate(paymentDate: string) {
+  return paymentDate > jakartaTodayDateInputValue();
+}
 
 function isRombelNameValidForGrade(gradeName: string | undefined, rombelName: string) {
   const expectedGradeNumber = gradeName?.match(/^\d+/)?.[0];
@@ -792,6 +806,10 @@ export async function createStudent(formData: FormData) {
     redirect(`${errorRedirectTo}&studentError=${encodeURIComponent("Field wajib belum lengkap.")}`);
   }
 
+  if (isFuturePaymentDate(paymentDate)) {
+    redirect(`${errorRedirectTo}&studentError=${encodeURIComponent(futurePaymentDateMessage)}`);
+  }
+
   if (!email) {
     redirect(`${errorRedirectTo}&studentError=${encodeURIComponent(invalidEmailMessage)}`);
   }
@@ -896,6 +914,10 @@ export async function updateStudent(formData: FormData) {
 
   if (!paymentDate || !academicYear || !userSerial || !userName || !userPhone || !gradeId || !npsn || !paymentId || !agentId) {
     redirect(`${errorRedirectTo}&studentError=${encodeURIComponent("Field wajib belum lengkap.")}`);
+  }
+
+  if (isFuturePaymentDate(paymentDate)) {
+    redirect(`${errorRedirectTo}&studentError=${encodeURIComponent(futurePaymentDateMessage)}`);
   }
 
   if (!email) {

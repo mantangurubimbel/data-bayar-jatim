@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { X } from "lucide-react";
 import { createStudent, updateStudent } from "@/app/auth/actions";
 import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { ModalCloseLink } from "@/app/components/modal-close-link";
@@ -67,6 +68,12 @@ const mutedInputClass =
 const labelClass = "grid min-w-0 gap-1.5 text-xs font-bold text-slate-500";
 const selectClass = `${inputClass} appearance-auto`;
 const emptyFieldClass = "!border-red-400 !bg-red-50 focus:!border-red-500 focus:!ring-red-500/15";
+const todayDateInputValue = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Asia/Jakarta",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+}).format(new Date());
 
 export function StudentFormModal({
   branchId,
@@ -125,11 +132,8 @@ export function StudentFormModal({
           <h2 className="text-xl font-bold text-slate-800">
             {isEditMode ? `Edit Siswa: ${student?.nis}` : `Tambah Siswa: ${branchName}`}
           </h2>
-          <ModalCloseLink
-            className={buttonStyles.secondarySmall}
-            href={closeHref}
-          >
-            Tutup
+          <ModalCloseLink aria-label="Tutup modal" className={buttonStyles.iconClose} href={closeHref} title="Tutup">
+            <X className="size-4" aria-hidden="true" />
           </ModalCloseLink>
         </header>
 
@@ -175,6 +179,7 @@ export function StudentFormModal({
                 <input
                   className={fieldClass(student?.payment_date)}
                   defaultValue={student?.payment_date ?? ""}
+                  max={todayDateInputValue}
                   name="payment_date"
                   required
                   type="date"
@@ -217,7 +222,6 @@ export function StudentFormModal({
                   className={fieldClass(student?.email)}
                   defaultValue={student?.email ?? ""}
                   name="email"
-                  pattern="[^\\s@]+@[^\\s@]+\\.[^\\s@]+"
                   required
                   title="Domain email sepertinya salah. Periksa kembali alamat email."
                   type="email"
@@ -351,23 +355,20 @@ export function StudentFormModal({
               <label className={labelClass}>
                 Status
                 <select
-                  className={mutedInputClass}
+                  className={selectClass}
                   defaultValue={student?.status ?? "Active"}
-                  disabled={isEditMode}
-                  name={isEditMode ? undefined : "status"}
+                  name="status"
                 >
                   <option value="Active">Active</option>
                   <option value="Inactive">Inactive</option>
-                  <option value="Deleted">Deleted</option>
                 </select>
-                {isEditMode && <input name="status" type="hidden" value={student?.status ?? "Active"} />}
               </label>
             </div>
           </div>
 
           <footer className={buttonGroups.footer}>
             <button
-              className={isEditMode ? buttonStyles.disabled : buttonStyles.secondary}
+              className={isEditMode ? buttonStyles.disabledSmall : buttonStyles.secondarySmall}
               disabled={isEditMode}
               onClick={() => {
                 setSelectedAcademicYear(student?.academic_year ?? "");
@@ -379,7 +380,7 @@ export function StudentFormModal({
               Clear Form
             </button>
             <SubmitButton
-              className={buttonStyles.primary}
+              className={buttonStyles.primarySmall}
               pendingText="Menyimpan"
             >
               Simpan

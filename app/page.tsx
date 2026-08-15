@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { X } from "lucide-react";
 import { createBranchSchool, deleteRombel, deleteStudent, mutateStudent } from "@/app/auth/actions";
 import { AutoSubmitSelect } from "@/app/components/auto-submit-select";
 import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
@@ -20,6 +21,8 @@ type SearchParams = {
   year?: string;
   q?: string;
   incomplete?: string;
+  loyal?: string;
+  status?: string;
   page?: string;
   schoolPage?: string;
   rombelPage?: string;
@@ -77,7 +80,7 @@ type Branch = {
 type DashboardSummary = {
   active_students: number;
   incomplete_students: number;
-  loyal_students: number;
+  loyal_students: string;
   active_rombels: number;
   renewal_rate: string;
   avg_students_per_rombel: string;
@@ -188,13 +191,31 @@ async function getAccessibleBranches(userId: string | undefined, isAdmin: boolea
   return data ?? [];
 }
 
+function previousAcademicYear(academicYear: string) {
+  const match = academicYear.match(/^(\d{2,4})\/(\d{2,4})$/);
+
+  if (!match) {
+    return null;
+  }
+
+  const [, startYear, endYear] = match;
+  const previousStart = String(Number(startYear) - 1).padStart(startYear.length, "0");
+  const previousEnd = String(Number(endYear) - 1).padStart(endYear.length, "0");
+
+  return `${previousStart}/${previousEnd}`;
+}
+
+function formatRate(count: number, total: number) {
+  return total > 0 ? `${((count / total) * 100).toFixed(0)}%` : "0%";
+}
+
 async function getDashboardSummary(branchId: number, academicYear: string): Promise<DashboardSummary> {
   const supabase = createSupabaseServiceRoleClient();
   const [{ data: students }, { data: rombels }] = await Promise.all([
     supabase
       .from("t_students")
       .select(
-        "nis, user_serial, birth_date, email, npsn, rombel_id, parents_name, parents_phone, agent_id, payment_id",
+        "nis, user_serial, birth_date, email, npsn, rombel_id, parents_name, parents_phone, agent_id, payment_id, status",
       )
       .eq("branch_id", branchId)
       .eq("academic_year", academicYear)
@@ -207,6 +228,7 @@ async function getDashboardSummary(branchId: number, academicYear: string): Prom
   ]);
 
   const activeStudents = students ?? [];
+  const activeStatusStudents = activeStudents.filter((student) => student.status === "Active");
   const selectedYearSerials = [
     ...new Set(
       activeStudents
@@ -214,26 +236,49 @@ async function getDashboardSummary(branchId: number, academicYear: string): Prom
         .filter((serial): serial is string => Boolean(serial)),
     ),
   ];
-  const { data: repeatPurchaseRows } =
+  const previousYear = previousAcademicYear(academicYear);
+  const [{ data: repeatPurchaseRows }, { data: previousYearRows }] = await Promise.all([
     selectedYearSerials.length > 0
-      ? await supabase
+      ? supabase
           .from("t_students")
           .select("user_serial")
           .in("user_serial", selectedYearSerials)
           .neq("academic_year", academicYear)
           .neq("status", "Deleted")
-      : { data: [] };
-  const loyalSerials = new Set(
+      : Promise.resolve({ data: [] }),
+    selectedYearSerials.length > 0 && previousYear
+      ? supabase
+          .from("t_students")
+          .select("user_serial")
+          .in("user_serial", selectedYearSerials)
+          .eq("academic_year", previousYear)
+          .neq("status", "Deleted")
+      : Promise.resolve({ data: [] }),
+  ]);
+  const allYearLoyalSerials = new Set(
     (repeatPurchaseRows ?? [])
       .map((student) => student.user_serial?.trim())
       .filter((serial): serial is string => Boolean(serial)),
   );
-  const loyalStudents = activeStudents.filter((student) =>
-    loyalSerials.has(student.user_serial?.trim() ?? ""),
+  const previousYearLoyalSerials = new Set(
+    (previousYearRows ?? [])
+      .map((student) => student.user_serial?.trim())
+      .filter((serial): serial is string => Boolean(serial)),
+  );
+  const allYearLoyalStudents = activeStudents.filter((student) =>
+    allYearLoyalSerials.has(student.user_serial?.trim() ?? ""),
+  ).length;
+  const previousYearLoyalStudents = activeStudents.filter((student) =>
+    previousYearLoyalSerials.has(student.user_serial?.trim() ?? ""),
   ).length;
   const filled = (value: string | null) => Boolean(value?.trim());
   const studentRombelIds = new Set(
     activeStudents
+      .map((student) => student.rombel_id)
+      .filter((rombelId): rombelId is number => typeof rombelId === "number"),
+  );
+  const activeStatusStudentRombelIds = new Set(
+    activeStatusStudents
       .map((student) => student.rombel_id)
       .filter((rombelId): rombelId is number => typeof rombelId === "number"),
   );
@@ -260,14 +305,21 @@ async function getDashboardSummary(branchId: number, academicYear: string): Prom
       student.payment_id === null,
   ).length;
   const activeRombels = (rombels ?? []).filter((rombel) => studentRombelIds.has(rombel.rombel_id)).length;
+  const activeStatusRombels = (rombels ?? []).filter((rombel) =>
+    activeStatusStudentRombelIds.has(rombel.rombel_id),
+  ).length;
 
   return {
     active_students: activeStudents.length,
     incomplete_students: incompleteStudents,
-    loyal_students: loyalStudents,
+    loyal_students: `${previousYearLoyalStudents} / ${allYearLoyalStudents}`,
     active_rombels: activeRombels,
-    renewal_rate: activeStudents.length > 0 ? `${((loyalStudents / activeStudents.length) * 100).toFixed(2)}%` : "0.00%",
-    avg_students_per_rombel: activeRombels > 0 ? (activeStudents.length / activeRombels).toFixed(2) : "0.00",
+    renewal_rate: `${formatRate(previousYearLoyalStudents, activeStudents.length)} / ${formatRate(
+      allYearLoyalStudents,
+      activeStudents.length,
+    )}`,
+    avg_students_per_rombel:
+      activeStatusRombels > 0 ? (activeStatusStudents.length / activeStatusRombels).toFixed(2) : "0.00",
   };
 }
 
@@ -321,6 +373,9 @@ async function getDashboardData(params: SearchParams) {
     "26/27";
   const query = params.q?.trim() ?? "";
   const incompleteOnly = params.incomplete === "1";
+  const loyalOnly = params.loyal === "1";
+  const studentStatusFilter =
+    params.status === "Active" || params.status === "Inactive" ? params.status : "";
   const currentPage = Math.max(Number(params.page ?? "1") || 1, 1);
   const currentSchoolPage = Math.max(Number(params.schoolPage ?? "1") || 1, 1);
   const currentRombelPage = Math.max(Number(params.rombelPage ?? "1") || 1, 1);
@@ -340,6 +395,8 @@ async function getDashboardData(params: SearchParams) {
       availableYears,
       query,
       incompleteOnly,
+      loyalOnly,
+      studentStatusFilter,
       currentPage,
       totalStudents: 0,
       totalPages: 1,
@@ -376,7 +433,7 @@ async function getDashboardData(params: SearchParams) {
 
   let studentQuery = dataSupabase
     .from("v_student_detail")
-    .select("nis, user_name, school_name, grade, rombel_name, user_serial, is_incomplete", {
+    .select("nis, user_name, school_name, grade, rombel_name, user_serial, is_incomplete, status", {
       count: "exact",
     })
     .eq("branch_id", selectedBranch.branch_id)
@@ -397,6 +454,44 @@ async function getDashboardData(params: SearchParams) {
 
   if (incompleteOnly) {
     studentQuery = studentQuery.eq("is_incomplete", true);
+  }
+  if (studentStatusFilter) {
+    studentQuery = studentQuery.eq("status", studentStatusFilter);
+  }
+  if (loyalOnly) {
+    const { data: currentYearSerialRows } = await dataSupabase
+      .from("t_students")
+      .select("user_serial")
+      .eq("branch_id", selectedBranch.branch_id)
+      .eq("academic_year", selectedYear)
+      .neq("status", "Deleted");
+    const currentYearSerials = [
+      ...new Set(
+        (currentYearSerialRows ?? [])
+          .map((student) => student.user_serial?.trim())
+          .filter((serial): serial is string => Boolean(serial)),
+      ),
+    ];
+
+    if (currentYearSerials.length > 0) {
+      const { data: loyalSerialRows } = await dataSupabase
+        .from("t_students")
+        .select("user_serial")
+        .in("user_serial", currentYearSerials)
+        .neq("academic_year", selectedYear)
+        .neq("status", "Deleted");
+      const loyalSerials = [
+        ...new Set(
+          (loyalSerialRows ?? [])
+            .map((student) => student.user_serial?.trim())
+            .filter((serial): serial is string => Boolean(serial)),
+        ),
+      ];
+
+      studentQuery = loyalSerials.length > 0 ? studentQuery.in("user_serial", loyalSerials) : studentQuery.eq("user_serial", "__none__");
+    } else {
+      studentQuery = studentQuery.eq("user_serial", "__none__");
+    }
   }
 
   const [
@@ -530,7 +625,11 @@ async function getDashboardData(params: SearchParams) {
   const [{ data: paymentMethods }, { data: agents }, { data: studentFormRombels }] =
     needsStudentFormData
       ? await Promise.all([
-          dataSupabase.from("t_payment_method").select("payment_id, payment_method").order("payment_id"),
+          dataSupabase
+            .from("t_payment_method")
+            .select("payment_id, payment_method")
+            .eq("is_active", true)
+            .order("payment_id"),
           dataSupabase
             .from("t_agent")
             .select("agent_id, agent_name, branch_id")
@@ -583,6 +682,8 @@ async function getDashboardData(params: SearchParams) {
     availableYears,
     query,
     incompleteOnly,
+    loyalOnly,
+    studentStatusFilter,
     currentPage,
     totalStudents,
     totalPages: Math.max(Math.ceil(totalStudents / pageSize), 1),
@@ -649,6 +750,19 @@ const metricLabels = [
   ["Avg Students/Rombel", "avg_students_per_rombel"],
 ] as const;
 
+function ModalCloseButton({ href }: { href: string }) {
+  return (
+    <ModalCloseLink
+      aria-label="Tutup modal"
+      className={buttonStyles.iconClose}
+      href={href}
+      title="Tutup"
+    >
+      <X className="size-4" aria-hidden="true" />
+    </ModalCloseLink>
+  );
+}
+
 function schoolPageHref(data: Awaited<ReturnType<typeof getDashboardData>>, page: number) {
   const params = new URLSearchParams();
 
@@ -677,6 +791,12 @@ function pageBaseHref(data: Awaited<ReturnType<typeof getDashboardData>>) {
 
   if (data.incompleteOnly) {
     params.set("incomplete", "1");
+  }
+  if (data.loyalOnly) {
+    params.set("loyal", "1");
+  }
+  if (data.studentStatusFilter) {
+    params.set("status", data.studentStatusFilter);
   }
 
   params.set("page", String(data.currentPage));
@@ -824,12 +944,14 @@ export default async function Home({
         </section>
 
         <StudentTableCard
-          key={`${data.selectedBranch?.branch_id ?? "none"}-${data.selectedYear}-${data.query}-${data.incompleteOnly}-${data.currentPage}-${params.studentRefresh ?? ""}`}
+          key={`${data.selectedBranch?.branch_id ?? "none"}-${data.selectedYear}-${data.query}-${data.incompleteOnly}-${data.loyalOnly}-${data.studentStatusFilter}-${data.currentPage}-${params.studentRefresh ?? ""}`}
           branchId={data.selectedBranch?.branch_id ?? null}
           branchName={data.selectedBranch?.branch_name ?? "-"}
           academicYear={data.selectedYear}
           query={data.query}
           incompleteOnly={data.incompleteOnly}
+          loyalOnly={data.loyalOnly}
+          statusFilter={data.studentStatusFilter}
           keepParams={{
             addSchool: params.addSchool,
             lookupNpsn: params.lookupNpsn,
@@ -1152,12 +1274,7 @@ function StudentDetailModal({
       <section className="mx-auto flex h-[calc(100vh-1.5rem)] max-w-2xl flex-col overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl sm:h-[calc(100vh-2.5rem)]">
         <header className="flex shrink-0 items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Detail Siswa: {student.nis}</h2>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
+          <ModalCloseButton href={closeHref} />
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto">
@@ -1256,10 +1373,11 @@ function PurchaseHistoryModal({
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-5xl overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">
             Riwayat Pembelian {student.user_name}
           </h2>
+          <ModalCloseButton href={closeHref} />
         </header>
 
         <div className="p-4">
@@ -1302,14 +1420,6 @@ function PurchaseHistoryModal({
           </div>
         </div>
 
-        <footer className={`sticky bottom-0 bg-white ${buttonGroups.modalFooter}`}>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
-        </footer>
       </section>
     </div>
   );
@@ -1342,8 +1452,9 @@ function RombelDetailModal({
       }`}
     >
       <section className="mx-auto max-w-xl overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Detail Rombel</h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="divide-y divide-slate-200">
           {rows.map(([label, value], index) => (
@@ -1367,12 +1478,6 @@ function RombelDetailModal({
           >
             Daftar Siswa
           </Link>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
         </footer>
       </section>
     </div>
@@ -1391,10 +1496,11 @@ function RombelStudentsModal({
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-3xl overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">
             Daftar Siswa {rombel.rombel_name}
           </h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="max-h-[520px] overflow-y-auto px-4 pb-4">
           <table className="w-full table-fixed border-separate border-spacing-0 text-left text-sm">
@@ -1433,14 +1539,6 @@ function RombelStudentsModal({
             </tbody>
           </table>
         </div>
-        <footer className={buttonGroups.modalFooter}>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
-        </footer>
       </section>
     </div>
   );
@@ -1460,12 +1558,7 @@ function DeleteRombelConfirmModal({
       <section className="mx-auto max-w-lg overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Hapus Rombel</h2>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="grid gap-3 p-4 text-sm">
           <p className="font-semibold text-slate-600">
@@ -1514,8 +1607,9 @@ function DeleteStudentConfirmModal({
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-lg overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Hapus Data Siswa</h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="grid gap-3 p-4 text-sm">
           <p className="font-semibold text-slate-600">
@@ -1536,12 +1630,6 @@ function DeleteStudentConfirmModal({
           </div>
         </div>
         <footer className={buttonGroups.modalFooter}>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Batal
-          </ModalCloseLink>
           <form action={deleteStudent}>
             <input name="nis" type="hidden" value={String(student.nis)} />
             <input name="redirect_to" type="hidden" value={redirectTo} />
@@ -1577,8 +1665,9 @@ function MutateStudentModal({
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-lg overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Mutasi Siswa</h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <form action={mutateStudent}>
           <div className="grid gap-4 p-4">
@@ -1608,20 +1697,14 @@ function MutateStudentModal({
                 ))}
               </select>
             </label>
-            <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
-              Setelah mutasi, rombel siswa akan dikosongkan dan perlu dipilih ulang di cabang tujuan.
-            </div>
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-800">
+            Setelah mutasi, rombel siswa akan dikosongkan dan perlu dipilih ulang di cabang tujuan.
           </div>
-          <footer className={buttonGroups.modalFooter}>
-            <ModalCloseLink
-              className={buttonStyles.secondary}
-              href={closeHref}
-            >
-              Batal
-            </ModalCloseLink>
-            <SubmitButton
-              className={buttonStyles.primary}
-              pendingText="Memutasi"
+        </div>
+        <footer className={buttonGroups.modalFooter}>
+          <SubmitButton
+            className={buttonStyles.primary}
+            pendingText="Memutasi"
             >
               Mutasi
             </SubmitButton>
@@ -1636,20 +1719,14 @@ function MutationSuccessModal({ closeHref }: { closeHref: string }) {
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-md overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Informasi</h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="p-4">
           <p className="text-sm font-semibold text-slate-600">Siswa berhasil dimutasi</p>
         </div>
-        <footer className={buttonGroups.modalFooter}>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
-        </footer>
+        
       </section>
     </div>
   );
@@ -1679,8 +1756,9 @@ function SchoolDetailModal({
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-2xl overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Detail Sekolah</h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="divide-y divide-slate-200">
           {rows.map(([label, value], index) => (
@@ -1713,14 +1791,7 @@ function SchoolDetailModal({
             </div>
           )}
         </div>
-        <footer className={buttonGroups.modalFooter}>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
-        </footer>
+        
       </section>
     </div>
   );
@@ -1761,8 +1832,9 @@ function SchoolLookupModal({
   return (
     <div data-modal-root className="fixed inset-0 z-50 overflow-y-auto bg-slate-900/55 p-3 sm:p-5">
       <section className="mx-auto max-w-2xl overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
-        <header className="border-b border-slate-200 p-4">
+        <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">Cari Sekolah Jawa Timur</h2>
+          <ModalCloseButton href={closeHref} />
         </header>
         <div className="p-4">
           <form className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
@@ -1826,12 +1898,6 @@ function SchoolLookupModal({
               Daftarkan
             </SubmitButton>
           </form>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
-          </ModalCloseLink>
         </footer>
       </section>
     </div>

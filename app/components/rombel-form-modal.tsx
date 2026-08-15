@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { X } from "lucide-react";
 import { createRombel, updateRombel } from "@/app/auth/actions";
 import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { ModalCloseLink } from "@/app/components/modal-close-link";
@@ -74,11 +75,8 @@ export function RombelFormModal({
       <section className="mx-auto max-w-2xl overflow-hidden rounded-lg bg-white text-slate-700 shadow-xl">
         <header className="flex items-center justify-between gap-4 border-b border-slate-200 p-4">
           <h2 className="text-xl font-bold text-slate-800">{isEditMode ? "Edit Rombel" : "Tambah Rombel"}</h2>
-          <ModalCloseLink
-            className={buttonStyles.secondary}
-            href={closeHref}
-          >
-            Tutup
+          <ModalCloseLink aria-label="Tutup modal" className={buttonStyles.iconClose} href={closeHref} title="Tutup">
+            <X className="size-4" aria-hidden="true" />
           </ModalCloseLink>
         </header>
 

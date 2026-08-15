@@ -16,6 +16,7 @@ const buttonColors = {
   disabled: "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 hover:border-slate-200 hover:bg-slate-100",
   header: "border border-white/25 bg-transparent text-white hover:border-white/45 hover:bg-white/10",
   ghostPrimary: "border border-transparent bg-transparent text-[#2f6696] hover:border-slate-200 hover:bg-slate-100",
+  ghostMuted: "border border-transparent bg-transparent text-slate-500 hover:border-slate-200 hover:bg-slate-100 hover:text-slate-700",
 };
 
 export const buttonStyles = {
@@ -32,6 +33,7 @@ export const buttonStyles = {
   header: `${buttonBase} ${buttonSizes.md} ${buttonColors.header}`,
   iconPrimary: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.primary}`,
   iconEdit: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.ghostPrimary}`,
+  iconClose: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.ghostMuted}`,
   iconDanger: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.danger}`,
   iconDisabled: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.disabled}`,
   pager: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
