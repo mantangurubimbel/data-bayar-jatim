@@ -354,9 +354,11 @@ export function StudentFormModal({
               </label>
               <label className={labelClass}>
                 Status
+                {!isEditMode && <input name="status" type="hidden" value="Active" />}
                 <select
-                  className={selectClass}
+                  className={isEditMode ? selectClass : mutedInputClass}
                   defaultValue={student?.status ?? "Active"}
+                  disabled={!isEditMode}
                   name="status"
                 >
                   <option value="Active">Active</option>

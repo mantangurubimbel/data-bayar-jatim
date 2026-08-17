@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
+import { AutoLogout } from "@/app/components/auto-logout";
 import { NavigationPendingIndicator } from "@/app/components/navigation-pending-indicator";
 import "./globals.css";
 
@@ -15,6 +16,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Suspense fallback={null}>
           <NavigationPendingIndicator />
         </Suspense>
+        <AutoLogout />
         {children}
       </body>
     </html>

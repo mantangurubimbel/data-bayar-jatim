@@ -1,8 +1,10 @@
 import Link from "next/link";
+import { Activity, Building2, LayoutDashboard, Users } from "lucide-react";
 import { redirect } from "next/navigation";
 import { retrySheetSync, updateUserAccess } from "@/app/auth/actions";
 import { BranchAccessDropdown } from "@/app/components/branch-access-dropdown";
 import { buttonStyles } from "@/app/components/button-styles";
+import { GeneratePasswordButton } from "@/app/components/generate-password-button";
 import { SubmitButton } from "@/app/components/submit-button";
 import {
   createSupabaseServerClient,
@@ -243,22 +245,61 @@ export default async function AdministratorPage({
   const failedSyncCount = syncLogRows.filter((log) => log.status === "failed").length;
 
   return (
-    <main className="min-h-screen bg-[#f3f6fb] text-slate-900">
-      <header className="sticky top-0 z-40 bg-[#2f6696] px-6 py-3 text-white shadow-sm sm:px-10">
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold text-blue-100">Administrator</p>
-            <h1 className="text-xl font-bold">Manajemen User & Branch Access</h1>
-          </div>
-          <Link
-            className={buttonStyles.header}
-            href="/"
-          >
+    <main className="min-h-screen bg-[#f8fafc] font-[Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,Segoe_UI,sans-serif] text-[14px] text-slate-900 lg:grid lg:grid-cols-[208px_minmax(0,1fr)]">
+      <aside className="hidden bg-[#171717] text-white lg:flex lg:min-h-screen lg:flex-col">
+        <div className="px-4 py-5">
+          <h1 className="text-[20px] font-bold tracking-tight">Data Bayar</h1>
+          <p className="mt-1 text-[13px] font-semibold text-white/55">Admin Console</p>
+        </div>
+        <nav className="grid gap-1 border-t border-white/5 px-2 py-4 text-[14px] font-bold text-white/80">
+          <p className="px-3 pb-2 text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Main</p>
+          <Link className="flex items-center gap-3 rounded-md px-3 py-2.5 hover:bg-white/10" href="/">
+            <LayoutDashboard className="size-4" aria-hidden="true" />
             Dashboard
           </Link>
+          <Link className="flex items-center gap-3 rounded-md bg-[#2b2b2b] px-3 py-2.5 text-white ring-1 ring-white/5" href="#admin-overview">
+            <LayoutDashboard className="size-4" aria-hidden="true" />
+            Overview
+          </Link>
+          <p className="px-3 pb-2 pt-4 text-[11px] font-bold uppercase tracking-[0.16em] text-white/35">Management</p>
+          <Link className="flex items-center gap-3 rounded-md px-3 py-2.5 hover:bg-white/10" href="#admin-operations">
+            <Building2 className="size-4" aria-hidden="true" />
+            Operasional
+          </Link>
+          <Link className="flex items-center gap-3 rounded-md px-3 py-2.5 hover:bg-white/10" href="#admin-logs">
+            <Activity className="size-4" aria-hidden="true" />
+            Log
+          </Link>
+          <Link className="flex items-center gap-3 rounded-md px-3 py-2.5 hover:bg-white/10" href="#admin-users">
+            <Users className="size-4" aria-hidden="true" />
+            User
+          </Link>
+        </nav>
+        <div className="mt-auto border-t border-white/5 px-4 py-5 text-sm">
+          <p className="font-bold">Administrator</p>
+          <p className="mt-1 text-xs font-semibold text-white/50">Manajemen akses</p>
         </div>
-      </header>
-      <div className="mx-auto grid max-w-7xl gap-4 px-6 py-6 sm:px-10">
+      </aside>
+
+      <div className="min-w-0">
+        <header className="sticky top-0 z-40 border-b border-slate-200 bg-white px-5 py-4 lg:px-8">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[12px] font-bold uppercase tracking-[0.24em] text-[#316bff]">Administrator</p>
+              <h1 className="mt-1.5 text-[24px] font-bold leading-tight tracking-tight text-slate-950">
+                Manajemen User & Branch Access
+              </h1>
+              <p className="mt-1 text-sm font-semibold text-slate-500">
+                Monitor operasional, sinkronisasi, dan akses user.
+              </p>
+            </div>
+            <Link className={buttonStyles.secondary} href="/">
+              Dashboard
+            </Link>
+          </div>
+        </header>
+
+      <div className="grid w-full gap-4 px-5 py-5 lg:px-8">
         {params.error && (
           <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
             {params.error}
@@ -275,9 +316,10 @@ export default async function AdministratorPage({
           </div>
         )}
 
-        <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+          <div className="grid min-w-0 gap-4">
+        <section id="admin-overview" className="scroll-mt-24 rounded-md border border-slate-200 bg-white ">
           <div className="border-b border-slate-200 p-4">
-            <h2 className="text-2xl font-bold">Dashboard Admin</h2>
+            <h2 className="text-xl font-bold">Dashboard Admin</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">
               Ringkasan operasional lintas branch.
             </p>
@@ -285,37 +327,37 @@ export default async function AdministratorPage({
           <div className="grid gap-4 p-4 lg:grid-cols-4">
             <div className="rounded-md border border-slate-200 p-4">
               <p className="text-xs font-bold uppercase text-slate-500">Total siswa</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{formatNumber(totalStudents)}</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatNumber(totalStudents)}</p>
             </div>
             <div className="rounded-md border border-slate-200 p-4">
               <p className="text-xs font-bold uppercase text-slate-500">Data belum lengkap</p>
-              <p className="mt-2 text-3xl font-black text-amber-600">
+              <p className="mt-2 text-2xl font-bold text-amber-600">
                 {formatNumber(totalIncompleteStudents)}
               </p>
             </div>
             <div className="rounded-md border border-slate-200 p-4">
               <p className="text-xs font-bold uppercase text-slate-500">User terdaftar</p>
-              <p className="mt-2 text-3xl font-black text-slate-900">{formatNumber(usersList.length)}</p>
+              <p className="mt-2 text-2xl font-bold text-slate-900">{formatNumber(usersList.length)}</p>
             </div>
             <div className="rounded-md border border-slate-200 p-4">
               <p className="text-xs font-bold uppercase text-slate-500">Sync gagal terbaru</p>
-              <p className="mt-2 text-3xl font-black text-red-600">{formatNumber(failedSyncCount)}</p>
+              <p className="mt-2 text-2xl font-bold text-red-600">{formatNumber(failedSyncCount)}</p>
             </div>
           </div>
-          <div className="grid gap-4 border-t border-slate-200 p-4 xl:grid-cols-[1.4fr_1fr]">
+          <div id="admin-operations" className="grid scroll-mt-24 gap-4 border-t border-slate-200 p-4 xl:grid-cols-[1.4fr_1fr]">
             <div className="overflow-hidden rounded-md border border-slate-200">
-              <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <h3 className="text-sm font-black text-slate-700">Siswa per Branch</h3>
+              <div className="border-b border-slate-200 bg-white px-4 py-3">
+                <h3 className="text-sm font-bold text-slate-700">Siswa per Branch</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[680px] text-left text-sm">
-                  <thead className="bg-slate-100 text-xs uppercase text-slate-500">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 font-black">Branch</th>
-                      <th className="px-4 py-3 text-right font-black">Siswa</th>
-                      <th className="px-4 py-3 text-right font-black">Belum lengkap</th>
-                      <th className="px-4 py-3 text-right font-black">Tanpa rombel</th>
-                      <th className="px-4 py-3 text-right font-black">User</th>
+                      <th className="px-4 py-3 font-bold">Branch</th>
+                      <th className="px-4 py-3 text-right font-bold">Siswa</th>
+                      <th className="px-4 py-3 text-right font-bold">Belum lengkap</th>
+                      <th className="px-4 py-3 text-right font-bold">Tanpa rombel</th>
+                      <th className="px-4 py-3 text-right font-bold">User</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -342,15 +384,15 @@ export default async function AdministratorPage({
             </div>
             <div className="grid gap-4">
               <div className="rounded-md border border-slate-200">
-                <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                  <h3 className="text-sm font-black text-slate-700">Data Belum Lengkap Terbanyak</h3>
+                <div className="border-b border-slate-200 bg-white px-4 py-3">
+                  <h3 className="text-sm font-bold text-slate-700">Data Belum Lengkap Terbanyak</h3>
                 </div>
                 <div className="divide-y divide-slate-100">
                   {topIncompleteBranches.length > 0 ? (
                     topIncompleteBranches.map((branch) => (
                       <div className="flex items-center justify-between gap-3 px-4 py-3" key={branch.branch_id}>
                         <span className="truncate text-sm font-bold text-slate-700">{branch.branch_name}</span>
-                        <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-black text-amber-700">
+                        <span className="shrink-0 rounded-full bg-amber-50 px-2.5 py-1 text-xs font-bold text-amber-700">
                           {formatNumber(branch.incomplete_students)}
                         </span>
                       </div>
@@ -361,14 +403,14 @@ export default async function AdministratorPage({
                 </div>
               </div>
               <div className="rounded-md border border-slate-200">
-                <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                  <h3 className="text-sm font-black text-slate-700">Branch Belum Punya User</h3>
+                <div className="border-b border-slate-200 bg-white px-4 py-3">
+                  <h3 className="text-sm font-bold text-slate-700">Branch Belum Punya User</h3>
                 </div>
                 <div className="flex max-h-44 flex-wrap gap-2 overflow-y-auto p-4">
                   {branchesWithoutUsers.length > 0 ? (
                     branchesWithoutUsers.map((branch) => (
                       <span
-                        className="rounded-full bg-red-50 px-3 py-1 text-xs font-black text-red-700"
+                        className="rounded-full bg-red-50 px-3 py-1 text-xs font-bold text-red-700"
                         key={branch.branch_id}
                       >
                         {branch.branch_name}
@@ -383,18 +425,18 @@ export default async function AdministratorPage({
           </div>
           <div className="border-t border-slate-200 p-4">
             <div className="overflow-hidden rounded-md border border-slate-200">
-              <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <h3 className="text-sm font-black text-slate-700">Aktivitas Siswa Terbaru</h3>
+              <div className="border-b border-slate-200 bg-white px-4 py-3">
+                <h3 className="text-sm font-bold text-slate-700">Aktivitas Siswa Terbaru</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-left text-sm">
-                  <thead className="bg-slate-100 text-xs uppercase text-slate-500">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 font-black">Waktu</th>
-                      <th className="px-4 py-3 font-black">Siswa</th>
-                      <th className="px-4 py-3 font-black">Branch</th>
-                      <th className="px-4 py-3 font-black">Status</th>
-                      <th className="px-4 py-3 font-black">Operator</th>
+                      <th className="px-4 py-3 font-bold">Waktu</th>
+                      <th className="px-4 py-3 font-bold">Siswa</th>
+                      <th className="px-4 py-3 font-bold">Branch</th>
+                      <th className="px-4 py-3 font-bold">Status</th>
+                      <th className="px-4 py-3 font-bold">Operator</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -423,28 +465,28 @@ export default async function AdministratorPage({
           </div>
         </section>
 
-        <section className="rounded-lg border border-slate-200 bg-white shadow-sm">
+        <section id="admin-logs" className="scroll-mt-24 rounded-md border border-slate-200 bg-white ">
           <div className="border-b border-slate-200 p-4">
-            <h2 className="text-2xl font-bold">Audit & Sync</h2>
+            <h2 className="text-xl font-bold">Audit & Sync</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">
               Log aktivitas siswa dan status sinkronisasi Google Sheet.
             </p>
           </div>
           <div className="grid gap-4 p-4 xl:grid-cols-2">
             <div className="overflow-hidden rounded-md border border-slate-200">
-              <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <h3 className="text-sm font-black text-slate-700">Aktivitas Data Siswa</h3>
+              <div className="border-b border-slate-200 bg-white px-4 py-3">
+                <h3 className="text-sm font-bold text-slate-700">Aktivitas Data Siswa</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[680px] text-left text-sm">
-                  <thead className="bg-slate-100 text-xs uppercase text-slate-500">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 font-black">Waktu</th>
-                      <th className="px-4 py-3 font-black">Aksi</th>
-                      <th className="px-4 py-3 font-black">Entitas</th>
-                      <th className="px-4 py-3 font-black">Branch</th>
-                      <th className="px-4 py-3 font-black">Perubahan</th>
-                      <th className="px-4 py-3 font-black">Operator</th>
+                      <th className="px-4 py-3 font-bold">Waktu</th>
+                      <th className="px-4 py-3 font-bold">Aksi</th>
+                      <th className="px-4 py-3 font-bold">Entitas</th>
+                      <th className="px-4 py-3 font-bold">Branch</th>
+                      <th className="px-4 py-3 font-bold">Perubahan</th>
+                      <th className="px-4 py-3 font-bold">Operator</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -453,9 +495,9 @@ export default async function AdministratorPage({
                         <td className="whitespace-nowrap px-4 py-3 font-semibold text-slate-600">
                           {formatDateTime(log.created_at)}
                         </td>
-                        <td className="px-4 py-3 font-black uppercase text-slate-700">{log.action}</td>
+                        <td className="px-4 py-3 font-bold uppercase text-slate-700">{log.action}</td>
                         <td className="px-4 py-3 font-semibold text-slate-700">
-                          <p className="font-black uppercase">{log.entity_type}</p>
+                          <p className="font-bold uppercase">{log.entity_type}</p>
                           <p className="text-xs text-slate-500">{log.entity_id ?? "-"}</p>
                         </td>
                         <td className="px-4 py-3 font-semibold text-slate-700">
@@ -477,19 +519,19 @@ export default async function AdministratorPage({
               </div>
             </div>
             <div className="overflow-hidden rounded-md border border-slate-200">
-              <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-                <h3 className="text-sm font-black text-slate-700">Status Sync Google Sheet</h3>
+              <div className="border-b border-slate-200 bg-white px-4 py-3">
+                <h3 className="text-sm font-bold text-slate-700">Status Sync Google Sheet</h3>
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[720px] text-left text-sm">
-                  <thead className="bg-slate-100 text-xs uppercase text-slate-500">
+                  <thead className="bg-slate-50 text-xs uppercase text-slate-500">
                     <tr>
-                      <th className="px-4 py-3 font-black">Waktu</th>
-                      <th className="px-4 py-3 font-black">NIS</th>
-                      <th className="px-4 py-3 font-black">Aksi</th>
-                      <th className="px-4 py-3 font-black">Status</th>
-                      <th className="px-4 py-3 font-black">Pesan</th>
-                      <th className="px-4 py-3 text-right font-black">Retry</th>
+                      <th className="px-4 py-3 font-bold">Waktu</th>
+                      <th className="px-4 py-3 font-bold">NIS</th>
+                      <th className="px-4 py-3 font-bold">Aksi</th>
+                      <th className="px-4 py-3 font-bold">Status</th>
+                      <th className="px-4 py-3 font-bold">Pesan</th>
+                      <th className="px-4 py-3 text-right font-bold">Retry</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -499,14 +541,14 @@ export default async function AdministratorPage({
                           {formatDateTime(log.last_attempt_at)}
                         </td>
                         <td className="px-4 py-3 font-semibold text-slate-700">{log.nis}</td>
-                        <td className="px-4 py-3 font-black uppercase text-slate-700">{log.action}</td>
+                        <td className="px-4 py-3 font-bold uppercase text-slate-700">{log.action}</td>
                         <td className="px-4 py-3">
                           <span
-                            className={`rounded-full px-2.5 py-1 text-xs font-black ${
+                            className={`rounded-full px-2.5 py-1 text-xs font-bold ${
                               log.status === "failed"
                                 ? "bg-red-50 text-red-700"
                                 : log.status === "skipped"
-                                  ? "bg-slate-100 text-slate-600"
+                                  ? "bg-slate-50 text-slate-600"
                                   : "bg-emerald-50 text-emerald-700"
                             }`}
                           >
@@ -544,57 +586,62 @@ export default async function AdministratorPage({
           </div>
         </section>
 
-        <section className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+        <section id="admin-users" className="scroll-mt-24 overflow-hidden rounded-md border border-slate-200 bg-white ">
           <div className="border-b border-slate-200 p-4">
-            <h2 className="text-2xl font-bold">Daftar User</h2>
+            <h2 className="text-xl font-bold">Daftar User</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">
               Edit role dan cabang yang bisa diakses setiap user.
             </p>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] border-collapse text-left text-sm">
-              <thead className="bg-slate-100 text-slate-600">
-                <tr>
-                  <th className="w-[24%] px-4 py-3 font-bold">User</th>
-                  <th className="w-[14%] px-4 py-3 font-bold">Posisi</th>
-                  <th className="w-[12%] px-4 py-3 font-bold">Role</th>
-                  <th className="px-4 py-3 font-bold">Branch Access</th>
-                  <th className="w-[110px] px-4 py-3 text-right font-bold">Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {usersList.map((appUser) => {
-                  const userAccess = accessByUser.get(appUser.id) ?? new Set<number>();
+          <div className="grid gap-2 p-4">
+            {usersList.map((appUser) => {
+              const userAccess = accessByUser.get(appUser.id) ?? new Set<number>();
+              const selectedBranchCount = userAccess.size;
+              const roleLabel =
+                rolesList.find((role) => role.role_id === appUser.role_id)?.role_name ?? appUser.role_id;
 
-                  return (
-                    <tr className="border-t border-slate-200 align-top" key={appUser.id}>
-                      <td className="px-4 py-3">
-                        <form action={updateUserAccess} id={`user-access-${appUser.id}`} />
-                        <input form={`user-access-${appUser.id}`} name="user_id" type="hidden" value={appUser.id} />
-                        <label className="grid gap-1 text-xs font-bold text-slate-500">
-                          Nama
-                          <input
-                            className="h-9 rounded-md border border-slate-200 px-3 text-sm font-normal text-slate-700 outline-none"
-                            defaultValue={appUser.name ?? ""}
-                            form={`user-access-${appUser.id}`}
-                            name="name"
-                          />
-                        </label>
-                        <p className="mt-2 truncate text-xs font-semibold text-slate-500">{appUser.email}</p>
-                      </td>
-                      <td className="px-4 py-3">
+              return (
+                <details className="group rounded-md border border-slate-200 bg-white" key={appUser.id}>
+                  <summary className="grid cursor-pointer list-none gap-3 px-4 py-3 hover:bg-white sm:grid-cols-[minmax(0,1fr)_130px_130px_90px] sm:items-center [&::-webkit-details-marker]:hidden">
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-bold text-slate-800">{appUser.name ?? appUser.email}</p>
+                      <p className="mt-1 truncate text-xs font-semibold text-slate-500">{appUser.email}</p>
+                    </div>
+                    <span className="rounded-full bg-slate-50 px-2.5 py-1 text-center text-xs font-bold text-slate-600">
+                      {roleLabel}
+                    </span>
+                    <span className="rounded-full bg-[#e8f1f8] px-2.5 py-1 text-center text-xs font-bold text-[#2f6696]">
+                      {selectedBranchCount} branch
+                    </span>
+                    <span className="text-right text-xs font-bold text-[#2f6696] group-open:text-slate-500">
+                      Edit
+                    </span>
+                  </summary>
+
+                  <form action={updateUserAccess} className="grid gap-4 border-t border-slate-200 bg-white p-4">
+                    <input name="user_id" type="hidden" value={appUser.id} />
+                    <div className="grid gap-4 lg:grid-cols-[1fr_220px_180px]">
+                      <label className="grid gap-1 text-xs font-bold text-slate-500">
+                        Nama
                         <input
-                          className="h-9 w-full rounded-md border border-slate-200 px-3 text-sm text-slate-700 outline-none"
+                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm font-normal text-slate-700 outline-none"
+                          defaultValue={appUser.name ?? ""}
+                          name="name"
+                        />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold text-slate-500">
+                        Posisi
+                        <input
+                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
                           defaultValue={appUser.position ?? ""}
-                          form={`user-access-${appUser.id}`}
                           name="position"
                         />
-                      </td>
-                      <td className="px-4 py-3">
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold text-slate-500">
+                        Role
                         <select
-                          className="h-9 w-full rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
+                          className="h-9 rounded-md border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none"
                           defaultValue={appUser.role_id}
-                          form={`user-access-${appUser.id}`}
                           name="role_id"
                         >
                           {rolesList.map((role) => (
@@ -603,30 +650,32 @@ export default async function AdministratorPage({
                             </option>
                           ))}
                         </select>
-                      </td>
-                      <td className="px-4 py-3">
+                      </label>
+                    </div>
+                    <div className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px] lg:items-start">
+                      <div>
+                        <p className="mb-1 text-xs font-bold text-slate-500">Branch Access</p>
                         <BranchAccessDropdown
                           branches={branchesList}
                           formId={`user-access-${appUser.id}`}
                           selectedBranchIds={[...userAccess]}
                         />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <SubmitButton
-                          className={buttonStyles.primary}
-                          form={`user-access-${appUser.id}`}
-                          pendingText="Menyimpan"
-                        >
+                      </div>
+                      <div className="flex flex-wrap justify-end gap-2 lg:flex-col lg:items-end">
+                        <SubmitButton className={buttonStyles.primary} pendingText="Menyimpan">
                           Simpan
                         </SubmitButton>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                        <GeneratePasswordButton userId={appUser.id} />
+                      </div>
+                    </div>
+                  </form>
+                </details>
+              );
+            })}
           </div>
         </section>
+          </div>
+        </div>
       </div>
     </main>
   );

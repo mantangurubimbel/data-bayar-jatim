@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { RefreshCw } from "lucide-react";
+import { RefreshCw, StickyNoteCheck, StickyNoteX, User, UserX } from "lucide-react";
 import { useState, useTransition } from "react";
 import { buttonStyles } from "@/app/components/button-styles";
 import { StudentFilters } from "@/app/components/student-filters";
@@ -116,6 +116,7 @@ export function StudentTableCard({
       const result = (await response.json()) as {
         currentPage?: number;
         error?: string;
+        serialCounts?: Record<string, number>;
         students?: StudentRow[];
         totalPages?: number;
         totalStudents?: number;
@@ -127,13 +128,9 @@ export function StudentTableCard({
       }
 
       const nextStudents = result.students ?? [];
-      const nextSerialCounts: Record<string, number> = {};
-      nextStudents.forEach((student) => {
-        nextSerialCounts[student.user_serial] = (nextSerialCounts[student.user_serial] ?? 0) + 1;
-      });
 
       setStudents(nextStudents);
-      setSerialCounts(nextSerialCounts);
+      setSerialCounts(result.serialCounts ?? {});
       setCurrentPage(result.currentPage ?? nextPage);
       setTotalPages(result.totalPages ?? 1);
       setTotalStudents(result.totalStudents ?? 0);
@@ -187,11 +184,12 @@ export function StudentTableCard({
         <table className="w-full table-fixed border-collapse text-left text-sm">
           <thead className="sticky top-0 z-10 bg-slate-100 text-slate-600">
             <tr>
-              <th className="w-[14%] px-3 py-2 font-bold">NIS</th>
-              <th className="w-[28%] px-3 py-2 font-bold">Nama Siswa</th>
-              <th className="w-[28%] px-3 py-2 font-bold">Asal Sekolah</th>
-              <th className="w-[12%] px-3 py-2 font-bold">Jenjang Kelas</th>
-              <th className="w-[18%] px-3 py-2 font-bold">Rombel</th>
+              <th className="w-[28%] px-3 py-2 font-bold sm:w-[13%]">NIS</th>
+              <th className="w-[44%] px-3 py-2 font-bold sm:w-[25%]">Nama Siswa</th>
+              <th className="hidden w-[26%] px-3 py-2 font-bold sm:table-cell">Asal Sekolah</th>
+              <th className="hidden w-[11%] px-3 py-2 font-bold sm:table-cell">Jenjang</th>
+              <th className="w-[28%] px-3 py-2 font-bold sm:w-[15%]">Rombel</th>
+              <th className="hidden w-[10%] px-3 py-2 text-center font-bold sm:table-cell">Info</th>
             </tr>
           </thead>
           <tbody>
@@ -210,20 +208,50 @@ export function StudentTableCard({
                 >
                   {student.user_name}
                 </td>
-                <td className="truncate px-3 py-2 text-slate-600" title={student.school_name ?? ""}>
+                <td className="hidden truncate px-3 py-2 text-slate-600 sm:table-cell" title={student.school_name ?? ""}>
                   {student.school_name ?? "-"}
                 </td>
-                <td className="truncate px-3 py-2 text-slate-600" title={student.grade ?? ""}>
+                <td className="hidden truncate px-3 py-2 text-slate-600 sm:table-cell" title={student.grade ?? ""}>
                   {student.grade ?? "-"}
                 </td>
                 <td className="truncate px-3 py-2 text-slate-600" title={student.rombel_name ?? ""}>
                   {student.rombel_name ?? "-"}
                 </td>
+                <td className="hidden px-3 py-2 sm:table-cell">
+                  <div className="flex items-center justify-center gap-2">
+                    {student.is_incomplete ? (
+                      <StickyNoteX
+                        aria-label="Data belum lengkap"
+                        className="size-4 text-orange-600"
+                        strokeWidth={2.4}
+                      />
+                    ) : (
+                      <StickyNoteCheck
+                        aria-label="Data lengkap"
+                        className="size-4 text-emerald-600"
+                        strokeWidth={2.4}
+                      />
+                    )}
+                    {student.status === "Inactive" ? (
+                      <UserX
+                        aria-label="Inactive"
+                        className="size-4 text-orange-600"
+                        strokeWidth={2.4}
+                      />
+                    ) : (
+                      <User
+                        aria-label="Active"
+                        className="size-4 text-emerald-600"
+                        strokeWidth={2.4}
+                      />
+                    )}
+                  </div>
+                </td>
               </tr>
             ))}
             {!students.length && (
               <tr>
-                <td className="px-4 py-8 text-center font-semibold text-slate-500" colSpan={5}>
+                <td className="px-4 py-8 text-center font-semibold text-slate-500" colSpan={6}>
                   Data siswa belum tersedia untuk filter ini.
                 </td>
               </tr>

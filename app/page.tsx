@@ -7,6 +7,7 @@ import { ModalCloseLink } from "@/app/components/modal-close-link";
 import { RombelTableCard } from "@/app/components/rombel-table-card";
 import { RombelFormModal } from "@/app/components/rombel-form-modal";
 import { SchoolTableCard } from "@/app/components/school-table-card";
+import { StudentCreateToast } from "@/app/components/student-create-toast";
 import { StudentFormModal } from "@/app/components/student-form-modal";
 import { StudentTableCard } from "@/app/components/student-table-card";
 import { SubmitButton } from "@/app/components/submit-button";
@@ -52,6 +53,7 @@ type AppProfile = {
   email: string | null;
   position: string | null;
   role_id: string;
+  id?: string;
 };
 
 type DetailValue = string | number | boolean | null;
@@ -335,7 +337,7 @@ async function getDashboardData(params: SearchParams) {
     user
       ? dataSupabase
           .from("t_app_user")
-          .select("name, email, position, role_id")
+          .select("id, name, email, position, role_id")
           .eq("id", user.id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -889,7 +891,7 @@ export default async function Home({
 
       <div className="mx-auto grid max-w-7xl gap-6 px-6 py-8 sm:px-10">
         <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-          <form className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+          <form className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_160px] lg:items-start">
             <div>
               <h2 className="text-2xl font-bold">
                 Ringkasan {data.selectedBranch?.branch_name ?? "Branch"}
@@ -899,7 +901,7 @@ export default async function Home({
                 {data.selectedYear}
               </p>
             </div>
-            <div className="grid gap-3 sm:grid-cols-[160px]">
+            <div className="grid justify-self-start gap-3 lg:justify-self-end">
               {data.selectedBranch && (
                 <input name="branch" type="hidden" value={data.selectedBranch.branch_id} />
               )}
@@ -1045,6 +1047,7 @@ export default async function Home({
           label={data.userEmail ?? data.profile?.email ?? "User"}
         />
       </div>
+      <StudentCreateToast currentUserId={data.profile?.id ?? null} />
 
       {data.selectedStudent && (
         <StudentDetailModal
@@ -1419,7 +1422,7 @@ function PurchaseHistoryModal({
             </table>
           </div>
         </div>
-
+        <footer aria-hidden="true" className={buttonGroups.modalFooter} />
       </section>
     </div>
   );
@@ -1539,6 +1542,7 @@ function RombelStudentsModal({
             </tbody>
           </table>
         </div>
+        <footer aria-hidden="true" className={buttonGroups.modalFooter} />
       </section>
     </div>
   );
@@ -1726,7 +1730,7 @@ function MutationSuccessModal({ closeHref }: { closeHref: string }) {
         <div className="p-4">
           <p className="text-sm font-semibold text-slate-600">Siswa berhasil dimutasi</p>
         </div>
-        
+        <footer aria-hidden="true" className={buttonGroups.modalFooter} />
       </section>
     </div>
   );
@@ -1791,7 +1795,7 @@ function SchoolDetailModal({
             </div>
           )}
         </div>
-        
+        <footer aria-hidden="true" className={buttonGroups.modalFooter} />
       </section>
     </div>
   );

@@ -6,7 +6,7 @@ import { useEffect, useRef, useState } from "react";
 import { buttonStyles } from "@/app/components/button-styles";
 
 function filterButtonStyle(isActive: boolean) {
-  return isActive ? buttonStyles.primary : buttonStyles.secondary;
+  return isActive ? buttonStyles.primary : buttonStyles.softPrimary;
 }
 
 export function StudentFilters({
@@ -103,7 +103,7 @@ export function StudentFilters({
         <span className="relative inline-flex">
           <select
             aria-label="Filter status siswa"
-            className={`${buttonStyles.secondary} appearance-none pr-9 outline-none`}
+            className={`${buttonStyles.softPrimary} appearance-none pr-9 outline-none`}
             value={selectedStatus}
             onChange={(event) => setSelectedStatus(event.target.value)}
           >

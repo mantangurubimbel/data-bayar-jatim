@@ -108,7 +108,7 @@ export function RombelTableCard({
           {error ? <p className="mt-2 text-sm font-bold text-red-600">{error}</p> : null}
         </div>
         <div className="flex gap-2">
-          <Link className={buttonStyles.primary} href={actionHref}>
+          <Link className={buttonStyles.primary} href={actionHref} scroll={false}>
             + Rombel
           </Link>
           <button
@@ -130,12 +130,13 @@ export function RombelTableCard({
         </p>
         <div className="flex items-center gap-3">
           {currentPage > 1 ? (
-            <Link
-              className={buttonStyles.pager}
-              href={pageHref(currentPage - 1)}
-            >
-              Prev
-            </Link>
+              <Link
+                className={buttonStyles.pager}
+                href={pageHref(currentPage - 1)}
+                scroll={false}
+              >
+                Prev
+              </Link>
           ) : (
             <span className={buttonStyles.pagerDisabled}>
               Prev
@@ -145,12 +146,13 @@ export function RombelTableCard({
             {currentPage} / {totalPages}
           </span>
           {currentPage < totalPages ? (
-            <Link
-              className={buttonStyles.pager}
-              href={pageHref(currentPage + 1)}
-            >
-              Next
-            </Link>
+              <Link
+                className={buttonStyles.pager}
+                href={pageHref(currentPage + 1)}
+                scroll={false}
+              >
+                Next
+              </Link>
           ) : (
             <span className={buttonStyles.pagerDisabled}>
               Next
@@ -164,7 +166,7 @@ export function RombelTableCard({
 
 function RombelTable({ rows, detailBaseHref }: { rows: string[][]; detailBaseHref: string }) {
   const columns = ["Nama Rombel", "Jenjang Kelas", "Jumsis", ""];
-  const columnWidths = ["w-[40%]", "w-[25%]", "w-[18%]", "w-[17%]"];
+  const columnWidths = ["w-[48%] sm:w-[40%]", "w-[32%] sm:w-[25%]", "w-[20%] sm:w-[18%]", "hidden sm:table-cell sm:w-[17%]"];
 
   function detailHref(rombelId: string) {
     const [pathname, queryString = ""] = detailBaseHref.split("?");
@@ -217,7 +219,7 @@ function RombelTable({ rows, detailBaseHref }: { rows: string[][]; detailBaseHre
                   key={`${cell}-${index}`}
                   className={`truncate px-3 py-2 text-slate-600 ${
                     index === row.length - 1 ? "text-right" : ""
-                  }`}
+                  } ${index === row.length - 1 ? "hidden sm:table-cell" : ""}`}
                   title={cell}
                 >
                   {index === row.length - 1 ? (

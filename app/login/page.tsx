@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signIn } from "@/app/auth/actions";
 import { buttonStyles } from "@/app/components/button-styles";
+import { PasswordInput } from "@/app/components/password-input";
 import { SubmitButton } from "@/app/components/submit-button";
 
 export default async function LoginPage({
@@ -47,13 +48,7 @@ export default async function LoginPage({
           </label>
           <label className="grid gap-2 text-sm font-bold text-slate-600">
             Password
-            <input
-              className="h-12 rounded-md border border-slate-300 px-4 text-base font-normal outline-none focus:border-[#2f6696]"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              required
-            />
+            <PasswordInput autoComplete="current-password" name="password" />
           </label>
           <SubmitButton
             className={`mt-2 ${buttonStyles.primaryLarge}`}

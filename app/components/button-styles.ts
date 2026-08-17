@@ -11,6 +11,7 @@ const buttonSizes = {
 
 const buttonColors = {
   primary: "border border-[#2f6696] bg-[#2f6696] text-white hover:border-[#285985] hover:bg-[#285985]",
+  softPrimary: "border border-[#c9ddef] bg-[#e8f1f8] text-[#2f6696] hover:border-[#a8c7dd] hover:bg-[#d9e9f5]",
   secondary: "border border-slate-300 bg-white text-slate-700 hover:border-slate-400 hover:bg-slate-50",
   danger: "border border-red-700 bg-red-700 text-white hover:border-red-800 hover:bg-red-800",
   disabled: "cursor-not-allowed border border-slate-200 bg-slate-100 text-slate-400 hover:border-slate-200 hover:bg-slate-100",
@@ -23,6 +24,8 @@ export const buttonStyles = {
   primary: `${buttonBase} ${buttonSizes.md} ${buttonColors.primary}`,
   primaryLarge: `${buttonBase} ${buttonSizes.lg} ${buttonColors.primary}`,
   primarySmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.primary}`,
+  softPrimary: `${buttonBase} ${buttonSizes.md} ${buttonColors.softPrimary}`,
+  softPrimarySmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.softPrimary}`,
   secondary: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
   secondaryLarge: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
   secondarySmall: `${buttonBase} ${buttonSizes.sm} ${buttonColors.secondary}`,

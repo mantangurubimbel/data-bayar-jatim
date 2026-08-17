@@ -494,6 +494,34 @@ export async function updateUserAccess(formData: FormData) {
   redirect("/administrator?success=1");
 }
 
+function generateTemporaryPassword() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
+  const randomValues = crypto.getRandomValues(new Uint8Array(14));
+  const passwordBody = Array.from(randomValues, (value) => alphabet[value % alphabet.length]).join("");
+
+  return `${passwordBody}!7`;
+}
+
+export async function generateUserPassword(userId: string) {
+  await requireAdminUser();
+
+  if (!userId) {
+    return { error: "User tidak ditemukan.", password: null };
+  }
+
+  const dataSupabase = createSupabaseServiceRoleClient();
+  const password = generateTemporaryPassword();
+  const { error } = await dataSupabase.auth.admin.updateUserById(userId, {
+    password,
+  });
+
+  if (error) {
+    return { error: error.message, password: null };
+  }
+
+  return { error: null, password };
+}
+
 async function generateStudentNis(branchId: number, academicYear: string) {
   const dataSupabase = createSupabaseServiceRoleClient();
   const yearCode = academicYear.slice(0, 2);

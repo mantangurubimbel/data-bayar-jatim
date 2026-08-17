@@ -53,12 +53,12 @@ export function AutoSubmitSelect({
         {label}
         {isPending && <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" />}
       </span>
-      <div className="relative">
+      <div className="relative w-full">
         <select
           className={
             isHeader
               ? "h-8 min-w-64 rounded-md border border-white/25 bg-white/15 px-4 pr-9 font-bold text-white outline-none"
-              : "h-10 rounded-md border border-slate-200 bg-white px-4 pr-9 font-bold text-slate-700 outline-none"
+              : "h-10 w-full rounded-md border border-slate-200 bg-white px-4 pr-9 font-bold text-slate-700 outline-none"
           }
           disabled={isPending}
           name={name}

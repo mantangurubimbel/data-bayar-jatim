@@ -106,8 +106,24 @@ export async function GET(request: Request) {
     return Response.json({ error: error.message }, { status: 500 });
   }
 
+  const serialCounts = Object.fromEntries((data ?? []).map((student) => [student.user_serial, 0]));
+  const serials = Object.keys(serialCounts).filter(Boolean);
+
+  if (serials.length > 0) {
+    const { data: serialRows } = await supabase
+      .from("v_student_detail")
+      .select("user_serial")
+      .in("user_serial", serials)
+      .neq("status", "Deleted");
+
+    serialRows?.forEach((row) => {
+      serialCounts[row.user_serial] = (serialCounts[row.user_serial] ?? 0) + 1;
+    });
+  }
+
   return Response.json({
     currentPage,
+    serialCounts,
     students: data ?? [],
     totalPages: Math.max(Math.ceil((count ?? 0) / pageSize), 1),
     totalStudents: count ?? 0,

@@ -104,7 +104,7 @@ export function SchoolTableCard({
           {error ? <p className="mt-2 text-sm font-bold text-red-600">{error}</p> : null}
         </div>
         <div className="flex gap-2">
-          <Link className={buttonStyles.primary} href={actionHref}>
+          <Link className={buttonStyles.primary} href={actionHref} scroll={false}>
             + Sekolah
           </Link>
           <button
@@ -162,12 +162,13 @@ export function SchoolTableCard({
         </p>
         <div className="flex items-center gap-3">
           {currentPage > 1 ? (
-            <Link
-              className={buttonStyles.pager}
-              href={pageHref(currentPage - 1)}
-            >
-              Prev
-            </Link>
+              <Link
+                className={buttonStyles.pager}
+                href={pageHref(currentPage - 1)}
+                scroll={false}
+              >
+                Prev
+              </Link>
           ) : (
             <span className={buttonStyles.pagerDisabled}>
               Prev
@@ -177,12 +178,13 @@ export function SchoolTableCard({
             {currentPage} / {totalPages}
           </span>
           {currentPage < totalPages ? (
-            <Link
-              className={buttonStyles.pager}
-              href={pageHref(currentPage + 1)}
-            >
-              Next
-            </Link>
+              <Link
+                className={buttonStyles.pager}
+                href={pageHref(currentPage + 1)}
+                scroll={false}
+              >
+                Next
+              </Link>
           ) : (
             <span className={buttonStyles.pagerDisabled}>
               Next
