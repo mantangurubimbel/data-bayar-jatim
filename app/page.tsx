@@ -9,9 +9,11 @@ import { RombelFormModal } from "@/app/components/rombel-form-modal";
 import { SchoolTableCard } from "@/app/components/school-table-card";
 import { StudentCreateToast } from "@/app/components/student-create-toast";
 import { StudentFormModal } from "@/app/components/student-form-modal";
+import { StudentLeadsCard, type StudentLeadRow } from "@/app/components/student-leads-card";
 import { StudentTableCard } from "@/app/components/student-table-card";
 import { SubmitButton } from "@/app/components/submit-button";
 import { UserDropupMenu } from "@/app/components/user-dropup-menu";
+import { isAdminRole } from "@/app/administrator/admin-utils";
 import {
   createSupabaseServerClient,
   createSupabaseServiceRoleClient,
@@ -39,6 +41,8 @@ type SearchParams = {
   deleteRombel?: string;
   rombelStudents?: string;
   school?: string;
+  schoolRefresh?: string;
+  fromLeads?: string;
   addSchool?: string;
   addStudent?: string;
   editStudent?: string;
@@ -51,7 +55,8 @@ type SearchParams = {
 type AppProfile = {
   name: string | null;
   email: string | null;
-  position: string | null;
+  position_id: number | null;
+  t_position?: { position_name: string | null } | null;
   role_id: string;
   id?: string;
 };
@@ -77,6 +82,7 @@ type AuditLogRow = {
 type Branch = {
   branch_id: number;
   branch_name: string;
+  region_id: number | null;
 };
 
 type DashboardSummary = {
@@ -138,6 +144,26 @@ function auditActionLabel(action: string) {
 const schoolPageSize = 20;
 const rombelPageSize = 20;
 const pageSize = 20;
+const dashboardFetchPageSize = 1000;
+
+async function fetchDashboardRows<T>(
+  queryPage: (from: number, to: number) => PromiseLike<{ data: T[] | null }>,
+) {
+  const rows: T[] = [];
+  let from = 0;
+
+  while (true) {
+    const { data } = await queryPage(from, from + dashboardFetchPageSize - 1);
+    const pageRows = data ?? [];
+    rows.push(...pageRows);
+
+    if (pageRows.length < dashboardFetchPageSize) {
+      return rows;
+    }
+
+    from += dashboardFetchPageSize;
+  }
+}
 
 const detailFields =
   "nis, payment_date, academic_year, user_serial, user_name, user_phone, birth_date, email, grade_id, grade, npsn, school_name, rombel_id, rombel_name, parents_name, parents_phone, agent_id, agent_name, payment_id, payment_method, status, branch_id, branch_name";
@@ -163,8 +189,7 @@ async function getAccessibleBranches(userId: string | undefined, isAdmin: boolea
   if (isAdmin) {
     const { data } = await supabase
       .from("t_branch")
-      .select("branch_id, branch_name")
-      .neq("branch_id", 100)
+      .select("branch_id, branch_name, region_id")
       .order("branch_name");
 
     return data ?? [];
@@ -185,7 +210,7 @@ async function getAccessibleBranches(userId: string | undefined, isAdmin: boolea
 
   const { data } = await supabase
     .from("t_branch")
-    .select("branch_id, branch_name")
+    .select("branch_id, branch_name, region_id")
     .in("branch_id", branchIds)
     .neq("branch_id", 100)
     .order("branch_name");
@@ -333,11 +358,11 @@ async function getDashboardData(params: SearchParams) {
 
   const dataSupabase = createSupabaseServiceRoleClient();
 
-  const [{ data: profile }, { data: years }, { data: activeYears }, { data: grades }] = await Promise.all([
+  const [{ data: profile }, { data: years }, { data: activeYears }, { data: inputYearSetting }, { data: grades }] = await Promise.all([
     user
       ? dataSupabase
           .from("t_app_user")
-          .select("id, name, email, position, role_id")
+          .select("id, name, email, position_id, t_position(position_name), role_id")
           .eq("id", user.id)
           .maybeSingle()
       : Promise.resolve({ data: null }),
@@ -350,8 +375,16 @@ async function getDashboardData(params: SearchParams) {
       .select("academic_year")
       .eq("is_active", true)
       .order("academic_year", { ascending: false }),
+    dataSupabase
+      .from("t_app_setting")
+      .select("setting_value")
+      .eq("setting_key", "student_input_academic_years")
+      .maybeSingle(),
     dataSupabase.from("t_grade").select("grade_id, grade, level").order("grade_id"),
   ]);
+  const configuredInputYears = ((inputYearSetting?.setting_value ?? {}) as { academic_years?: string[] }).academic_years;
+  const inputAcademicYears = new Set(configuredInputYears ?? (years ?? []).map((year) => year.academic_year));
+  const inputYears = (years ?? []).filter((year) => inputAcademicYears.has(year.academic_year));
 
   const profileRole = typeof profile?.role_id === "string" ? profile.role_id : "";
   const branches = (await getAccessibleBranches(user?.id, profileRole === "admin")) as Branch[];
@@ -368,11 +401,11 @@ async function getDashboardData(params: SearchParams) {
     : { data: [] };
   const availableYears = [...new Set((branchStudentYears ?? []).map((row) => row.academic_year).filter(Boolean))];
   const selectedYear =
-    (params.year && availableYears.includes(params.year) ? params.year : null) ??
-    availableYears[0] ??
+    (params.year && years?.some((year) => year.academic_year === params.year) ? params.year : null) ??
     years?.find((year) => year.is_active)?.academic_year ??
     years?.[0]?.academic_year ??
-    "26/27";
+    availableYears[0] ??
+    "";
   const query = params.q?.trim() ?? "";
   const incompleteOnly = params.incomplete === "1";
   const loyalOnly = params.loyal === "1";
@@ -414,6 +447,8 @@ async function getDashboardData(params: SearchParams) {
       schools: [],
       rombels: [],
       studentFormRombels: [],
+      studentLeads: [],
+      previousAcademicYear: previousAcademicYear(selectedYear),
       selectedStudent: null,
       purchaseHistory: [],
       selectedRombel: null,
@@ -426,6 +461,7 @@ async function getDashboardData(params: SearchParams) {
       paymentMethods: [],
       agents: [],
       activeYears: activeYears ?? [],
+      inputYears: [],
       studentFormSchools: [],
       grades: grades ?? [],
       profile: profile as AppProfile | null,
@@ -518,6 +554,47 @@ async function getDashboardData(params: SearchParams) {
       .order("rombel_name", { ascending: true })
       .range(rombelFrom, rombelTo),
   ]);
+
+  const previousYear = previousAcademicYear(selectedYear);
+  const previousYearLeadCandidates = previousYear
+    ? await fetchDashboardRows<StudentLeadRow & { grade_id: number | null }>((from, to) =>
+        dataSupabase
+          .from("v_student_detail")
+          .select("nis, user_serial, user_name, grade, school_name, agent_name, grade_id")
+          .eq("branch_id", selectedBranch.branch_id)
+          .eq("academic_year", previousYear)
+          .lt("grade_id", 12)
+          .neq("status", "Deleted")
+          .range(from, to),
+      )
+    : [];
+  const previousYearLeadSerials = [
+    ...new Set(
+      previousYearLeadCandidates
+        .map((student) => student.user_serial?.trim())
+        .filter((serial): serial is string => Boolean(serial)),
+    ),
+  ];
+  const currentYearSerialRows =
+    previousYearLeadSerials.length > 0
+      ? await fetchDashboardRows<{ user_serial: string | null }>((from, to) =>
+          dataSupabase
+            .from("t_students")
+            .select("user_serial")
+            .in("user_serial", previousYearLeadSerials)
+            .eq("academic_year", selectedYear)
+            .neq("status", "Deleted")
+            .range(from, to),
+        )
+      : [];
+  const currentYearSerialSet = new Set(
+    currentYearSerialRows
+      .map((student) => student.user_serial?.trim())
+      .filter((serial): serial is string => Boolean(serial)),
+  );
+  const studentLeads = previousYearLeadCandidates.filter(
+    (student) => !currentYearSerialSet.has(student.user_serial?.trim() ?? ""),
+  );
 
   const { data: selectedStudent } = params.student
     ? await dataSupabase
@@ -634,7 +711,7 @@ async function getDashboardData(params: SearchParams) {
             .order("payment_id"),
           dataSupabase
             .from("t_agent")
-            .select("agent_id, agent_name, branch_id")
+            .select("agent_id, agent_name, branch_id, t_branch(region_id)")
             .eq("is_active", true)
             .order("agent_name"),
           dataSupabase
@@ -697,6 +774,8 @@ async function getDashboardData(params: SearchParams) {
     totalRombelPages: Math.max(Math.ceil((rombelCount ?? 0) / rombelPageSize), 1),
     summary,
     students: students ?? [],
+    studentLeads,
+    previousAcademicYear: previousYear,
     serialCounts,
     schools: schools ?? [],
     rombels: rombels ?? [],
@@ -714,6 +793,7 @@ async function getDashboardData(params: SearchParams) {
     schoolAlreadyRegistered: Boolean(registeredSchool),
     lookupNpsn: normalizedLookupNpsn,
     activeYears: activeYears ?? [],
+    inputYears,
     studentFormSchools:
       studentFormSchools
         ?.map((school) => ({
@@ -726,10 +806,24 @@ async function getDashboardData(params: SearchParams) {
     paymentMethods: paymentMethods ?? [],
     agents:
       [...(agents ?? [])].sort((first, second) => {
+        const firstBranch = Array.isArray(first.t_branch) ? first.t_branch[0] : first.t_branch;
+        const secondBranch = Array.isArray(second.t_branch) ? second.t_branch[0] : second.t_branch;
         const firstBranchOrder =
-          first.branch_id === selectedBranch.branch_id ? 0 : first.branch_id === 100 ? 1 : 2;
+          first.branch_id === selectedBranch.branch_id
+            ? 0
+            : first.branch_id === null
+              ? 1
+              : firstBranch?.region_id === selectedBranch.region_id
+                ? 2
+                : 3;
         const secondBranchOrder =
-          second.branch_id === selectedBranch.branch_id ? 0 : second.branch_id === 100 ? 1 : 2;
+          second.branch_id === selectedBranch.branch_id
+            ? 0
+            : second.branch_id === null
+              ? 1
+              : secondBranch?.region_id === selectedBranch.region_id
+                ? 2
+                : 3;
 
         if (firstBranchOrder !== secondBranchOrder) {
           return firstBranchOrder - secondBranchOrder;
@@ -868,7 +962,7 @@ export default async function Home({
           <form className="flex flex-col gap-3 sm:flex-row sm:items-end">
             <div className="text-left sm:text-right">
               <p className="text-xs font-semibold text-blue-100">
-                {data.profile?.position ?? "Position"}
+                {data.profile?.t_position?.position_name ?? "Position"}
               </p>
               <p className="font-bold">{data.profile?.name ?? data.userEmail ?? "User"}</p>
               <p className="text-xs font-semibold text-blue-100">
@@ -985,7 +1079,7 @@ export default async function Home({
 
         <div className="grid gap-6 lg:grid-cols-2">
           <SchoolTableCard
-            key={`${data.selectedBranch?.branch_id ?? "none"}-${data.currentSchoolPage}`}
+            key={`${data.selectedBranch?.branch_id ?? "none"}-${data.currentSchoolPage}-${params.schoolRefresh ?? ""}`}
             branchId={data.selectedBranch?.branch_id ?? null}
             initialSchools={data.schools}
             initialCurrentPage={data.currentSchoolPage}
@@ -1035,6 +1129,13 @@ export default async function Home({
           />
         </div>
 
+        <StudentLeadsCard
+          detailBaseHref={dashboardHref(data, { student: null, history: null })}
+          leads={data.studentLeads}
+          previousAcademicYear={data.previousAcademicYear}
+          selectedAcademicYear={data.selectedYear}
+        />
+
         <footer className="py-4 text-center text-sm italic text-slate-500">
           <p>Data Bayar Teritori Jawa Timur</p>
           <p className="mt-1">Created by RE@2026</p>
@@ -1043,7 +1144,7 @@ export default async function Home({
 
       <div className="fixed bottom-4 right-4 z-40">
         <UserDropupMenu
-          isAdmin={data.profile?.role_id === "admin"}
+          isAdmin={isAdminRole(data.profile?.role_id)}
           label={data.userEmail ?? data.profile?.email ?? "User"}
         />
       </div>
@@ -1056,6 +1157,7 @@ export default async function Home({
           closeHref={dashboardHref(data, { student: null, history: null })}
           historyHref={dashboardHref(data, { student: data.selectedStudent.nis, history: "1" })}
           hasPurchaseHistory={hasPurchaseHistory}
+          showActions={params.fromLeads !== "1"}
           isBackground={params.history === "1"}
           editHref={dashboardHref(data, {
             student: data.selectedStudent.nis,
@@ -1187,7 +1289,7 @@ export default async function Home({
           branchName={data.selectedBranch.branch_name}
           closeHref={dashboardHref(data, { addStudent: null, studentError: null })}
           redirectTo={dashboardHref(data, { addStudent: null, studentError: null })}
-          years={data.activeYears}
+          years={data.inputYears}
           grades={data.grades}
           schools={data.studentFormSchools}
           paymentMethods={data.paymentMethods}
@@ -1202,7 +1304,7 @@ export default async function Home({
           branchName={data.selectedBranch.branch_name}
           closeHref={dashboardHref(data, { editStudent: null, studentError: null })}
           redirectTo={dashboardHref(data, { editStudent: null, studentError: null })}
-          years={data.activeYears}
+          years={data.inputYears}
           grades={data.grades}
           schools={data.studentFormSchools}
           paymentMethods={data.paymentMethods}
@@ -1235,6 +1337,7 @@ function StudentDetailModal({
   closeHref,
   historyHref,
   hasPurchaseHistory,
+  showActions = true,
   editHref,
   deleteHref,
   mutateHref,
@@ -1245,6 +1348,7 @@ function StudentDetailModal({
   closeHref: string;
   historyHref: string;
   hasPurchaseHistory: boolean;
+  showActions?: boolean;
   editHref: string;
   deleteHref: string;
   mutateHref: string;
@@ -1325,39 +1429,28 @@ function StudentDetailModal({
         </div>
 
         <footer className={`shrink-0 ${buttonGroups.modalFooter}`}>
-          {hasPurchaseHistory ? (
-            <Link
-              className={buttonStyles.secondary}
-              href={historyHref}
-            >
-              Riwayat Pembelian
-            </Link>
-          ) : (
-            <button
-              className={buttonStyles.disabled}
-              disabled
-            >
-              Riwayat Pembelian
-            </button>
-          )}
-          <Link
-            className={buttonStyles.secondary}
-            href={editHref}
-          >
-            Edit Data
-          </Link>
-          <Link
-            className={buttonStyles.primary}
-            href={mutateHref}
-          >
-            Mutasi
-          </Link>
-          <Link
-            className={buttonStyles.danger}
-            href={deleteHref}
-          >
-            Hapus
-          </Link>
+          {showActions ? (
+            <>
+              {hasPurchaseHistory ? (
+                <Link className={buttonStyles.secondary} href={historyHref}>
+                  Riwayat Pembelian
+                </Link>
+              ) : (
+                <button className={buttonStyles.disabled} disabled>
+                  Riwayat Pembelian
+                </button>
+              )}
+              <Link className={buttonStyles.secondary} href={editHref}>
+                Edit Data
+              </Link>
+              <Link className={buttonStyles.primary} href={mutateHref}>
+                Mutasi
+              </Link>
+              <Link className={buttonStyles.danger} href={deleteHref}>
+                Hapus
+              </Link>
+            </>
+          ) : null}
         </footer>
       </section>
     </div>

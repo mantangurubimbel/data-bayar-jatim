@@ -33,6 +33,7 @@ type Agent = {
   agent_id?: number;
   agent_name: string;
   branch_id: number | null;
+  t_branch?: { region_id: number | null } | { region_id: number | null }[] | null;
 };
 
 type Rombel = {
@@ -158,10 +159,14 @@ export function StudentFormModal({
               <label className={labelClass}>
                 Tahun Ajaran *
                 <select
-                  className={fieldClass(selectedAcademicYear, selectClass)}
+                  className={fieldClass(
+                    selectedAcademicYear,
+                    isEditMode ? mutedInputClass : selectClass,
+                  )}
                   name="academic_year"
                   onChange={(event) => setSelectedAcademicYear(event.target.value)}
-                  required
+                  disabled={isEditMode}
+                  required={!isEditMode}
                   value={selectedAcademicYear}
                 >
                   <option value="" disabled>
@@ -186,6 +191,18 @@ export function StudentFormModal({
                 />
               </label>
             </div>
+
+            {!isEditMode && (
+              <label className="flex items-center gap-2 text-xs font-bold text-slate-600">
+                <input
+                  className="size-4 accent-[#2f6696]"
+                  name="create_next_academic_year"
+                  type="checkbox"
+                  value="1"
+                />
+                Daftarkan juga ke tahun ajaran berikutnya
+              </label>
+            )}
 
             <div className="grid gap-4 lg:grid-cols-2">
               <label className={labelClass}>

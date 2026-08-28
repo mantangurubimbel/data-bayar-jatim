@@ -1,7 +1,7 @@
 create table if not exists public.t_master_school (
   npsn text primary key,
   name text not null,
-  level varchar(3) not null,
+  level text not null,
   status varchar(6) not null,
   address text,
   district text,

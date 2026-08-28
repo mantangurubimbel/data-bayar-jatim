@@ -10,11 +10,6 @@ from public.t_rombel
 where academic_year is not null
 on conflict (academic_year) do nothing;
 
-insert into public.t_academic_year (academic_year, is_active)
-values ('26/27', true)
-on conflict (academic_year) do update
-set is_active = excluded.is_active;
-
 create or replace function public.current_app_role()
 returns text
 language sql
@@ -34,7 +29,7 @@ security definer
 set search_path = public
 stable
 as $$
-  select coalesce(public.current_app_role() = 'admin', false)
+  select coalesce(public.current_app_role() in ('admin', 'admin_limited'), false)
 $$;
 
 create or replace function public.has_branch_access(target_branch_id integer)
@@ -431,3 +426,70 @@ grant select on public.v_student_detail to authenticated;
 grant select on public.v_dashboard_summary to authenticated;
 grant select on public.v_branch_school_detail to authenticated;
 grant select on public.v_rombel_detail to authenticated;
+
+
+drop policy if exists "authenticated can read positions" on public.t_position;
+create policy "authenticated can read positions"
+on public.t_position for select
+to authenticated
+using (true);
+
+drop policy if exists "admin can manage positions" on public.t_position;
+create policy "admin can manage positions"
+on public.t_position for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "admin can read admin audit logs" on public.t_admin_audit_log;
+create policy "admin can read admin audit logs"
+on public.t_admin_audit_log for select
+to authenticated
+using (public.is_admin());
+
+grant select on public.t_admin_audit_log to authenticated;
+
+drop policy if exists "admin can read google sheet sync logs" on public.t_google_sheet_sync_log;
+create policy "admin can read google sheet sync logs"
+on public.t_google_sheet_sync_log for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "admin can read admin limited role filters" on public.t_admin_limited_role_filter;
+create policy "admin can read admin limited role filters"
+on public.t_admin_limited_role_filter for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "admin can manage admin limited role filters" on public.t_admin_limited_role_filter;
+create policy "admin can manage admin limited role filters"
+on public.t_admin_limited_role_filter for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "admin can read admin limited position filters" on public.t_admin_limited_position_filter;
+create policy "admin can read admin limited position filters"
+on public.t_admin_limited_position_filter for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "admin can manage admin limited position filters" on public.t_admin_limited_position_filter;
+create policy "admin can manage admin limited position filters"
+on public.t_admin_limited_position_filter for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());
+
+drop policy if exists "admin can read app settings" on public.t_app_setting;
+create policy "admin can read app settings"
+on public.t_app_setting for select
+to authenticated
+using (public.is_admin());
+
+drop policy if exists "admin can manage app settings" on public.t_app_setting;
+create policy "admin can manage app settings"
+on public.t_app_setting for all
+to authenticated
+using (public.is_admin())
+with check (public.is_admin());

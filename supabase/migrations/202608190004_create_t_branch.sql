@@ -1,7 +1,7 @@
 create table if not exists public.t_branch (
   branch_id integer primary key,
   branch_name text not null,
-  region_id integer not null,
+  region_id integer,
   created_at timestamp with time zone not null default now(),
   updated_at timestamp with time zone not null default now(),
 

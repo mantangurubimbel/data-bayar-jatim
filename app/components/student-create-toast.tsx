@@ -79,12 +79,8 @@ export function StudentCreateToast({
         },
       )
       .subscribe((status, error) => {
-        if (error) {
-          console.error("Student create toast subscription error:", error);
-        }
-
-        if (status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
-          console.error("Student create toast subscription status:", status);
+        if (error || status === "CHANNEL_ERROR" || status === "TIMED_OUT") {
+          console.warn("Student create toast realtime unavailable:", error?.message ?? status);
         }
       });
 

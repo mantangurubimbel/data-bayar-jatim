@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { RefreshCw, StickyNoteCheck, StickyNoteX, User, UserX } from "lucide-react";
+import { RefreshCw, StickyNoteCheck, StickyNoteX, User, Users, UserX } from "lucide-react";
 import { useState, useTransition } from "react";
 import { buttonStyles } from "@/app/components/button-styles";
 import { StudentFilters } from "@/app/components/student-filters";
@@ -100,16 +100,6 @@ export function StudentTableCard({
       if (query) {
         params.set("q", query);
       }
-      if (incompleteOnly) {
-        params.set("incomplete", "1");
-      }
-      if (statusFilter) {
-        params.set("status", statusFilter);
-      }
-      if (loyalOnly) {
-        params.set("loyal", "1");
-      }
-
       const response = await fetch(`/api/students?${params.toString()}`, {
         cache: "no-store",
       });
@@ -134,11 +124,16 @@ export function StudentTableCard({
       setCurrentPage(result.currentPage ?? nextPage);
       setTotalPages(result.totalPages ?? 1);
       setTotalStudents(result.totalStudents ?? 0);
-      window.history.replaceState(null, "", pageHref(nextPage));
       setFilterIncompleteOnly(false);
       setFilterLoyalOnly(false);
       setFilterStatus("");
       setFilterKey((current) => current + 1);
+
+      const nextUrlParams = new URLSearchParams(params);
+      nextUrlParams.delete("incomplete");
+      nextUrlParams.delete("loyal");
+      nextUrlParams.delete("status");
+      window.history.replaceState(null, "", `/?${nextUrlParams.toString()}`);
     });
   }
 
@@ -200,12 +195,7 @@ export function StudentTableCard({
                     {student.nis}
                   </Link>
                 </td>
-                <td
-                  className={`truncate px-3 py-2 text-slate-600 ${
-                    serialCounts[student.user_serial] > 1 ? "font-bold" : ""
-                  }`}
-                  title={student.user_name ?? ""}
-                >
+                <td className="truncate px-3 py-2 text-slate-600" title={student.user_name ?? ""}>
                   {student.user_name}
                 </td>
                 <td className="hidden truncate px-3 py-2 text-slate-600 sm:table-cell" title={student.school_name ?? ""}>
@@ -220,30 +210,27 @@ export function StudentTableCard({
                 <td className="hidden px-3 py-2 sm:table-cell">
                   <div className="flex items-center justify-center gap-2">
                     {student.is_incomplete ? (
-                      <StickyNoteX
-                        aria-label="Data belum lengkap"
-                        className="size-4 text-orange-600"
-                        strokeWidth={2.4}
-                      />
+                      <InfoIcon label="Data belum lengkap">
+                        <StickyNoteX className="size-4 text-orange-600" strokeWidth={2.4} />
+                      </InfoIcon>
                     ) : (
-                      <StickyNoteCheck
-                        aria-label="Data lengkap"
-                        className="size-4 text-emerald-600"
-                        strokeWidth={2.4}
-                      />
+                      <InfoIcon label="Data lengkap">
+                        <StickyNoteCheck className="size-4 text-[#2f6696]" strokeWidth={2.4} />
+                      </InfoIcon>
                     )}
                     {student.status === "Inactive" ? (
-                      <UserX
-                        aria-label="Inactive"
-                        className="size-4 text-orange-600"
-                        strokeWidth={2.4}
-                      />
+                      <InfoIcon label="Inactive student">
+                        <UserX className="size-4 text-orange-600" strokeWidth={2.4} />
+                      </InfoIcon>
                     ) : (
-                      <User
-                        aria-label="Active"
-                        className="size-4 text-emerald-600"
-                        strokeWidth={2.4}
-                      />
+                      <InfoIcon label="Active student">
+                        <User className="size-4 text-[#2f6696]" strokeWidth={2.4} />
+                      </InfoIcon>
+                    )}
+                    {serialCounts[student.user_serial] > 1 && (
+                      <InfoIcon align="right" label="Siswa loyal">
+                        <Users className="size-4 text-[#2f6696]" strokeWidth={2.4} />
+                      </InfoIcon>
                     )}
                   </div>
                 </td>
@@ -295,5 +282,28 @@ export function StudentTableCard({
         </div>
       </div>
     </section>
+  );
+}
+
+function InfoIcon({
+  align = "center",
+  children,
+  label,
+}: {
+  align?: "center" | "right";
+  children: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <span aria-label={label} className="group relative inline-flex size-5 items-center justify-center" tabIndex={0}>
+      {children}
+      <span
+        className={`pointer-events-none absolute bottom-full z-20 mb-2 hidden whitespace-nowrap rounded-md bg-slate-900 px-2 py-1 text-xs font-bold normal-case text-white shadow-lg group-hover:block group-focus:block ${
+          align === "right" ? "right-0" : "left-1/2 -translate-x-1/2"
+        }`}
+      >
+        {label}
+      </span>
+    </span>
   );
 }

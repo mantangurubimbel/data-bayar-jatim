@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signIn } from "@/app/auth/actions";
 import { buttonStyles } from "@/app/components/button-styles";
@@ -8,17 +7,11 @@ import { SubmitButton } from "@/app/components/submit-button";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; force?: string }>;
 }) {
   const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  await supabase.auth.getUser();
   const params = await searchParams;
-
-  if (user) {
-    redirect("/");
-  }
 
   return (
     <main className="grid min-h-screen place-items-center bg-[#f3f6fb] px-6 text-slate-900">

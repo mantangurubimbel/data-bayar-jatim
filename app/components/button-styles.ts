@@ -39,6 +39,9 @@ export const buttonStyles = {
   iconClose: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.ghostMuted}`,
   iconDanger: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.danger}`,
   iconDisabled: `${buttonBase} ${buttonSizes.iconMd} ${buttonColors.disabled}`,
+  formCompact: `${buttonBase} h-9 gap-1 px-2 text-xs ${buttonColors.secondary}`,
+  formCompactPrimary: `${buttonBase} h-9 gap-1 px-2 text-xs ${buttonColors.primary}`,
+  formCompactDanger: `${buttonBase} h-9 gap-1 px-2 text-xs ${buttonColors.danger}`,
   pager: `${buttonBase} ${buttonSizes.md} ${buttonColors.secondary}`,
   pagerDisabled: `${buttonBase} ${buttonSizes.md} ${buttonColors.disabled}`,
   clearSearch:
