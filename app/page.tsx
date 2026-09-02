@@ -2,6 +2,7 @@ import Link from "next/link";
 import { X } from "lucide-react";
 import { createBranchSchool, deleteRombel, deleteStudent, mutateStudent } from "@/app/auth/actions";
 import { AutoSubmitSelect } from "@/app/components/auto-submit-select";
+import { ActiveAgentsCard, type ActiveAgentRow } from "@/app/components/active-agents-card";
 import { buttonGroups, buttonStyles } from "@/app/components/button-styles";
 import { ModalCloseLink } from "@/app/components/modal-close-link";
 import { RombelTableCard } from "@/app/components/rombel-table-card";
@@ -391,6 +392,15 @@ async function getDashboardData(params: SearchParams) {
 
   const selectedBranch =
     branches.find((branch) => String(branch.branch_id) === params.branch) ?? branches[0] ?? null;
+  const { data: activeAgentRows } = selectedBranch
+    ? await dataSupabase
+        .from("t_agent")
+        .select("agent_id, agent_name, agent_email, branch_id, t_branch(branch_name)")
+        .eq("branch_id", selectedBranch.branch_id)
+        .eq("is_active", true)
+        .order("agent_name")
+    : { data: [] };
+  const activeAgents = (activeAgentRows ?? []) as ActiveAgentRow[];
   const { data: branchStudentYears } = selectedBranch
     ? await dataSupabase
         .from("t_students")
@@ -460,6 +470,7 @@ async function getDashboardData(params: SearchParams) {
       lookupNpsn: "",
       paymentMethods: [],
       agents: [],
+      activeAgents,
       activeYears: activeYears ?? [],
       inputYears: [],
       studentFormSchools: [],
@@ -831,6 +842,7 @@ async function getDashboardData(params: SearchParams) {
 
         return String(first.agent_name ?? "").localeCompare(String(second.agent_name ?? ""));
       }) ?? [],
+    activeAgents,
     grades: grades ?? [],
     profile: profile as AppProfile | null,
     userEmail: user?.email ?? null,
@@ -1135,6 +1147,8 @@ export default async function Home({
           previousAcademicYear={data.previousAcademicYear}
           selectedAcademicYear={data.selectedYear}
         />
+
+        <ActiveAgentsCard agents={data.activeAgents} />
 
         <footer className="py-4 text-center text-sm italic text-slate-500">
           <p>Data Bayar Teritori Jawa Timur</p>

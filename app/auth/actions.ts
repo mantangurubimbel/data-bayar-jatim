@@ -924,6 +924,60 @@ export async function updateAgentStatus(formData: FormData) {
   redirect(`/administrator/agents?status=${status}&success=1`);
 }
 
+export async function createAgent(formData: FormData) {
+  const actor = await requireAdminUser();
+  const dataSupabase = createSupabaseServiceRoleClient();
+  const status = formString(formData, "status") || "all";
+  const agentName = formString(formData, "agent_name");
+  const agentEmail = normalizeValidEmail(formData, "agent_email");
+  const branchId = Number(formData.get("branch_id"));
+  const errorRedirect = (message: string): never => {
+    redirect(
+      `/administrator/agents?status=${encodeURIComponent(status)}&addAgent=1&error=${encodeURIComponent(message)}`,
+    );
+  };
+
+  if (!agentName || !agentEmail || !Number.isFinite(branchId) || branchId <= 0 || branchId === 100) {
+    errorRedirect("Nama, email, dan branch wajib diisi dengan benar.");
+  }
+  const normalizedEmail = agentEmail ?? "";
+
+  if (!(await canManageBranch(actor.id, branchId))) {
+    errorRedirect("Agent di luar akses branch.");
+  }
+
+  const [{ data: branch }, { data: duplicateAgent }] = await Promise.all([
+    dataSupabase.from("t_branch").select("branch_id").eq("branch_id", branchId).maybeSingle(),
+    dataSupabase
+      .from("t_agent")
+      .select("agent_id")
+      .ilike("agent_email", normalizedEmail)
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  if (!branch) {
+    errorRedirect("Branch tidak ditemukan.");
+  }
+
+  if (duplicateAgent) {
+    errorRedirect("Email agent sudah terdaftar.");
+  }
+
+  const { error } = await dataSupabase.from("t_agent").insert({
+    agent_name: agentName,
+    agent_email: normalizedEmail,
+    branch_id: branchId,
+    is_active: true,
+  });
+
+  if (error) {
+    errorRedirect(error.message);
+  }
+
+  redirect(`/administrator/agents?status=${encodeURIComponent(status)}&success=agent-created`);
+}
+
 async function getManageableBranchIds(userId: string) {
   const dataSupabase = createSupabaseServiceRoleClient();
   const { data } = await dataSupabase.from("t_app_user_branch").select("branch_id").eq("user_id", userId);

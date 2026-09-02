@@ -1,11 +1,16 @@
+import Link from "next/link";
+import { Plus } from "lucide-react";
 import {
+  type BranchRow,
   type AgentRow,
   type UserBranchRow,
   isFullAdminRole,
   requireAdminContext,
 } from "@/app/administrator/admin-utils";
 import { AgentStatusSwitch } from "@/app/administrator/agents/agent-status-switch";
+import { AddAgentModal } from "@/app/administrator/agents/add-agent-modal";
 import { AgentStatusFilter, type AgentStatusFilterValue } from "@/app/administrator/agents/status-filter";
+import { buttonStyles } from "@/app/components/button-styles";
 import { PageHeader } from "@/app/administrator/page-header";
 
 function firstRelation<T>(value: T | T[] | null | undefined) {
@@ -15,14 +20,14 @@ function firstRelation<T>(value: T | T[] | null | undefined) {
 export default async function AdminAgentsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; status?: string; success?: string }>;
+  searchParams: Promise<{ addAgent?: string; error?: string; status?: string; success?: string }>;
 }) {
   const params = await searchParams;
   const selectedStatus: AgentStatusFilterValue =
     params.status === "active" || params.status === "inactive" ? params.status : "all";
   const { dataSupabase, profile } = await requireAdminContext();
   const isFullAdmin = isFullAdminRole(profile.role_id);
-  const [{ data: userBranches }, { data: agents }] = await Promise.all([
+  const [{ data: userBranches }, { data: agents }, { data: branches }] = await Promise.all([
     dataSupabase.from("t_app_user_branch").select("user_id, branch_id"),
     (selectedStatus === "all"
       ? dataSupabase
@@ -34,6 +39,11 @@ export default async function AdminAgentsPage({
           .select("agent_id, agent_name, branch_id, is_active, t_branch(branch_name)")
           .eq("is_active", selectedStatus === "active")
           .order("agent_name")),
+    dataSupabase
+      .from("t_branch")
+      .select("branch_id, branch_name, region_id, t_region(region_name)")
+      .order("region_id")
+      .order("branch_name"),
   ]);
   const actorBranchIds = new Set(
     ((userBranches ?? []) as UserBranchRow[])
@@ -43,6 +53,10 @@ export default async function AdminAgentsPage({
   const agentsList = ((agents ?? []) as AgentRow[]).filter(
     (agent) => isFullAdmin || agent.branch_id === null || actorBranchIds.has(agent.branch_id),
   );
+  const branchesList = (branches ?? []) as BranchRow[];
+  const modalBranches = isFullAdmin
+    ? branchesList
+    : branchesList.filter((branch) => actorBranchIds.has(branch.branch_id));
 
   return (
     <>
@@ -57,13 +71,28 @@ export default async function AdminAgentsPage({
           Status agent berhasil diperbarui.
         </div>
       )}
+      {params.success === "agent-created" && (
+        <div className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700">
+          Agent berhasil ditambahkan.
+        </div>
+      )}
       <section className="overflow-hidden rounded-md border border-slate-200 bg-white">
         <div className="flex flex-col gap-3 border-b border-slate-200 p-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <h2 className="text-xl font-bold">Daftar Agent</h2>
             <p className="mt-1 text-sm font-semibold text-slate-500">Agent yang terlihat mengikuti akses branch user.</p>
           </div>
-          <AgentStatusFilter value={selectedStatus} />
+          <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-end">
+            <AgentStatusFilter value={selectedStatus} />
+            <Link
+              className={buttonStyles.primary}
+              href={`/administrator/agents?status=${selectedStatus}&addAgent=1`}
+              scroll={false}
+            >
+              <Plus className="size-4" aria-hidden="true" />
+              Tambah Agent
+            </Link>
+          </div>
         </div>
         <div className="max-h-[calc(100vh-270px)] min-h-[360px] overflow-auto">
           <table className="w-full min-w-[640px] text-left text-sm font-normal text-slate-700">
@@ -104,6 +133,13 @@ export default async function AdminAgentsPage({
           </table>
         </div>
       </section>
+      {params.addAgent === "1" && (
+        <AddAgentModal
+          branches={modalBranches}
+          closeHref={`/administrator/agents?status=${selectedStatus}`}
+          status={selectedStatus}
+        />
+      )}
     </>
   );
 }
