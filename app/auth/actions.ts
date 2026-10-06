@@ -924,6 +924,79 @@ export async function updateAgentStatus(formData: FormData) {
   redirect(`/administrator/agents?status=${status}&success=1`);
 }
 
+export async function moveAgentBranch(formData: FormData) {
+  const actor = await requireAdminUser();
+  const dataSupabase = createSupabaseServiceRoleClient();
+  const agentId = Number(formData.get("agent_id"));
+  const branchId = Number(formData.get("branch_id"));
+  const status = formString(formData, "status") || "all";
+  const errorRedirect = (message: string): never => {
+    redirect(
+      `/administrator/agents?status=${encodeURIComponent(status)}&moveAgent=${agentId}&error=${encodeURIComponent(message)}`,
+    );
+  };
+
+  if (!Number.isFinite(agentId) || agentId <= 0 || !Number.isFinite(branchId) || branchId <= 0 || branchId === 100) {
+    errorRedirect("Agent atau branch tujuan tidak valid.");
+  }
+
+  const [{ data: agent }, { data: targetBranch }] = await Promise.all([
+    dataSupabase
+      .from("t_agent")
+      .select("agent_id, branch_id, app_user_id")
+      .eq("agent_id", agentId)
+      .maybeSingle(),
+    dataSupabase.from("t_branch").select("branch_id").eq("branch_id", branchId).maybeSingle(),
+  ]);
+
+  if (!agent) {
+    return errorRedirect("Agent tidak ditemukan.");
+  }
+
+  if (!targetBranch) {
+    errorRedirect("Branch tujuan tidak ditemukan.");
+  }
+
+  if (agent.branch_id !== null && !(await canManageBranch(actor.id, agent.branch_id))) {
+    errorRedirect("Agent di luar akses branch.");
+  }
+
+  if (!(await canManageBranchInSameRegion(actor.id, branchId))) {
+    errorRedirect("Branch tujuan di luar akses regional.");
+  }
+
+  const { error: agentError } = await dataSupabase
+    .from("t_agent")
+    .update({ branch_id: branchId })
+    .eq("agent_id", agentId);
+
+  if (agentError) {
+    errorRedirect(agentError.message);
+  }
+
+  if (agent.app_user_id) {
+    const { error: deleteBranchError } = await dataSupabase
+      .from("t_app_user_branch")
+      .delete()
+      .eq("user_id", agent.app_user_id);
+
+    if (deleteBranchError) {
+      errorRedirect(deleteBranchError.message);
+    }
+
+    const { error: insertBranchError } = await dataSupabase.from("t_app_user_branch").insert({
+      user_id: agent.app_user_id,
+      branch_id: branchId,
+    });
+
+    if (insertBranchError) {
+      errorRedirect(insertBranchError.message);
+    }
+  }
+
+  redirect(`/administrator/agents?status=${encodeURIComponent(status)}&success=agent-moved`);
+}
+
 export async function createAgent(formData: FormData) {
   const actor = await requireAdminUser();
   const dataSupabase = createSupabaseServiceRoleClient();

@@ -108,6 +108,7 @@ export type AgentRow = {
   agent_id: number;
   agent_name: string;
   branch_id: number | null;
+  app_user_id?: string | null;
   is_active: boolean;
   t_branch?: { branch_name: string | null } | { branch_name: string | null }[] | null;
 };
