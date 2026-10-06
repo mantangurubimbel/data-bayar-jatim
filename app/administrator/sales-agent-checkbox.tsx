@@ -23,11 +23,8 @@ export function SalesAgentCheckbox({
 
     function syncBranchCount() {
       const selectedBranches = form?.querySelectorAll<HTMLInputElement>('input[name="branch_ids"]:checked') ?? [];
-      const branchSelectors = form?.querySelectorAll<HTMLSelectElement>('select[name="branch_ids"]') ?? [];
-      const selectedBranchCount =
-        selectedBranches.length + [...branchSelectors].filter((select) => Boolean(select.value)).length;
-      setBranchCount(selectedBranchCount);
-      if (selectedBranchCount !== 1) {
+      setBranchCount(selectedBranches.length);
+      if (selectedBranches.length !== 1) {
         setChecked(false);
       }
     }

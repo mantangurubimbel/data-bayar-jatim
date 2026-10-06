@@ -549,7 +549,7 @@ async function syncSalesAgentForUser({
     if (agentId) {
       ({ error } = await dataSupabase
         .from("t_agent")
-        .update({ app_user_id: userId, branch_id: branchIds[0], is_active: true })
+        .update({ app_user_id: userId, is_active: true })
         .eq("agent_id", agentId));
     } else if (existingAgent) {
       ({ error } = await dataSupabase
@@ -674,8 +674,8 @@ export async function createUserFromAgent(formData: FormData) {
     redirect("/administrator/users?error=Email%20user%20tidak%20valid.");
   }
 
-  if (branchIds.length !== 1) {
-    redirect("/administrator/users?error=Sales%20agent%20harus%20punya%20tepat%201%20branch.");
+  if (branchIds.length !== 1 || branchIds[0] !== agent.branch_id) {
+    redirect("/administrator/users?error=Branch%20user%20harus%20sama%20dengan%20branch%20agent.");
   }
 
   if (!isFullAdminRole(actorProfile?.role_id)) {
@@ -692,7 +692,7 @@ export async function createUserFromAgent(formData: FormData) {
       redirect("/administrator/users?error=Posisi%20di%20luar%20akses%20Admin%20Terbatas.");
     }
 
-    if (!(await canManageBranchInSameRegion(actor.id, branchIds[0]))) {
+    if (!(await canManageBranchInSameRegion(actor.id, agent.branch_id))) {
       redirect("/administrator/users?error=Agent%20di%20luar%20regional%20Admin%20Terbatas.");
     }
   }

@@ -143,26 +143,15 @@ export function AddUserModal({
                   </select>
                 </label>
               </div>
-              <label className={labelClass}>
-                Branch Penempatan Agent
-                <select
-                  className={inputClass}
-                  defaultValue={selectedAgent ? String(selectedAgent.branch_id) : ""}
+              <div className={labelClass}>
+                <span>Akses Branch</span>
+                <BranchAccessTable
                   key={selectedAgent?.agent_id ?? "no-agent"}
-                  name="branch_ids"
-                  required
-                >
-                  <option value="">Pilih branch</option>
-                  {branches.map((branch) => (
-                    <option key={branch.branch_id} value={branch.branch_id}>
-                      {branch.branch_name}
-                    </option>
-                  ))}
-                </select>
-                <span className="font-normal text-slate-500">
-                  Pilih satu branch. Jika berbeda dari branch asal agent, penempatan agent akan dipindahkan.
-                </span>
-              </label>
+                  branches={branches}
+                  formId={formId}
+                  selectedBranchIds={selectedAgent ? [selectedAgent.branch_id] : []}
+                />
+              </div>
               <SalesAgentCheckbox
                 defaultChecked
                 formId={formId}
